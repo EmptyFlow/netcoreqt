@@ -3,12 +3,16 @@ cmake_minimum_required(VERSION 3.16)
 project(netcoreqt VERSION 0.1 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(PATH_NET_CORE_NATIVE_FOLDER "C:/Program Files/dotnet/packs/Microsoft.NETCore.App.Host.win-x64/7.0.10/runtimes/win-x64/native")
+set(PATH_NET_CORE_NATIVE_LIBRARY "C:/Program Files/dotnet/packs/Microsoft.NETCore.App.Host.win-x64/7.0.10/runtimes/win-x64/native/nethost.lib")
 
 find_package(Qt6 6.4 REQUIRED COMPONENTS Quick)
 
 qt_standard_project_setup()
 
 qt_add_executable(appnetcoreqt
+    netcorehost.cpp
+    netcorehost.h
     main.cpp
 )
 
@@ -29,6 +33,9 @@ set_target_properties(appnetcoreqt PROPERTIES
 target_link_libraries(appnetcoreqt
     PRIVATE Qt6::Quick
 )
+
+target_include_directories(appnetcoreqt PRIVATE ${PATH_NET_CORE_NATIVE_FOLDER})
+target_link_libraries(appnetcoreqt PRIVATE ${PATH_NET_CORE_NATIVE_LIBRARY})
 
 install(TARGETS appnetcoreqt
     BUNDLE DESTINATION .
