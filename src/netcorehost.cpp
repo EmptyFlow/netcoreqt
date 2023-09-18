@@ -32,12 +32,18 @@ bool NetCoreHost::loadAssemblyAndHost(const QString &assemblyName, const QString
     return true;
 }
 
-template <typename T>
-void NetCoreHost::getPointerMethod(const QString &className, const QString &methodName, bool haveDelegate, T delegate)
+bool NetCoreHost::initializeGlobalObject(const QString &className)
 {
-    //typedef void (CORECLR_DELEGATE_CALLTYPE* test_delegate_fn)(testDelegateMethodType arg);
-    //test_delegate_fn testDelegate = nullptr;
+    if (!getPointerMethod(className, "SetGlobalInt32", false, setGlobalInt32Pointer)) return false;
+    if (!getPointerMethod(className, "SetGlobalDouble", false, setGlobalDoublePointer)) return false;
+    if (!getPointerMethod(className, "SetGlobalString", false, setGlobalStringPointer)) return false;
 
+    return true;
+}
+
+template <typename T>
+bool NetCoreHost::getPointerMethod(const QString &className, const QString &methodName, bool haveDelegate, T delegate)
+{
     qDebug() << loadedAssemblyPath;
     qDebug() << loadedAssemblyNamespace + "." + className + ", " + loadedAssemblyName;
 
@@ -50,7 +56,8 @@ void NetCoreHost::getPointerMethod(const QString &className, const QString &meth
         (void**)&delegate);
     Q_ASSERT(rc == 0);
     Q_ASSERT(delegate != nullptr);
-    //testDelegate(&testDelegateMethod);
+
+    return rc == 0 && delegate != nullptr;
 }
 
 void *NetCoreHost::load_library(const char_t *path)

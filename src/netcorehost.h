@@ -29,12 +29,23 @@ private:
     QString loadedAssemblyNamespace = "";
     QString loadedAssemblyPath = "";
 
+    typedef void (CORECLR_DELEGATE_CALLTYPE* setGlobalInt32Delegate)(int objectId, int value);
+    typedef void (CORECLR_DELEGATE_CALLTYPE* setGlobalDoubleDelegate)(int objectId, double value);
+    typedef void (CORECLR_DELEGATE_CALLTYPE* setGlobalStringDelegate)(int objectId, char_t* value);
+    setGlobalInt32Delegate setGlobalInt32Pointer = nullptr;
+    setGlobalDoubleDelegate setGlobalDoublePointer = nullptr;
+    setGlobalStringDelegate setGlobalStringPointer = nullptr;
+
 public:
     explicit NetCoreHost(QObject *parent = nullptr);
 
     bool loadAssemblyAndHost(const QString &assemblyName, const QString &assemblyNamespace);
     template <typename T>
-    void getPointerMethod(const QString &className, const QString &methodName, bool haveDelegate, T delegate);
+    bool getPointerMethod(const QString &className, const QString &methodName, bool haveDelegate, T delegate);
+    bool initializeGlobalObject(const QString &className);
+    void setGlobalInt32(int objectId, int value) const { setGlobalInt32Pointer(objectId, value); }
+    void setGlobalDouble(int objectId, double value) const { setGlobalDoublePointer(objectId, value); }
+    void setGlobalString(int objectId, const QString& value) { setGlobalStringPointer(objectId, stringToCharPointer(value)); }
 
 private:
     void *load_library(const char_t *path);
