@@ -16,9 +16,9 @@ bool NetCoreHost::loadAssemblyAndHost(const QString &assemblyName, const QString
     auto rootPath = QCoreApplication::applicationDirPath();
     auto configPath = rootPath + "/" + assemblyName + ".runtimeconfig.json";
 
-    char_t * configPathAsCString = new wchar_t[configPath.size()+1];;
-    configPath.toWCharArray(configPathAsCString);
-    configPathAsCString[configPath.size()] = L'\0';
+    qDebug() << configPath;
+
+    char_t * configPathAsCString = stringToCharPointer(configPath);
 
     load_assembly_and_get_function_pointer = get_dotnet_load_assembly(configPathAsCString);
 
@@ -34,9 +34,9 @@ bool NetCoreHost::loadAssemblyAndHost(const QString &assemblyName, const QString
 
 bool NetCoreHost::initializeGlobalObject(const QString &className)
 {
-    if (!getPointerMethod(className, "SetGlobalInt32", false, setGlobalInt32Pointer)) return false;
-    if (!getPointerMethod(className, "SetGlobalDouble", false, setGlobalDoublePointer)) return false;
-    if (!getPointerMethod(className, "SetGlobalString", false, setGlobalStringPointer)) return false;
+    if (!getPointerMethod("NetCoreQtImportGlobal", "SetGlobalInt32", false, setGlobalInt32Pointer)) return false;
+    if (!getPointerMethod("NetCoreQtImportGlobal", "SetGlobalDouble", false, setGlobalDoublePointer)) return false;
+    if (!getPointerMethod("NetCoreQtImportGlobal", "SetGlobalString", false, setGlobalStringPointer)) return false;
 
     return true;
 }

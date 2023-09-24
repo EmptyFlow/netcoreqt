@@ -11,6 +11,20 @@ namespace NetCoreQtLibrary {
         public double Double { get; set; } = 4.5;
     }
 
+    public static class NetCoreQtEntryPoint {
+
+        [UnmanagedCallersOnly]
+        public static void Initialize () {
+            // make preparation
+        }
+
+        [UnmanagedCallersOnly]
+        public static void Deinitialize () {
+            // remove all unmanaged
+        }
+
+    }
+
     public static class NetCoreQtImportGlobal {
 
         private static GlobalObject? m_globalObject = null;
@@ -25,6 +39,15 @@ namespace NetCoreQtLibrary {
 
         [UnmanagedCallersOnly]
         public static void SetGlobalString ( int objectId, nint value ) => m_globalObject!.SetGlobalString ( objectId, value );
+
+        [UnmanagedCallersOnly]
+        public static int GetGlobalInt32 ( int objectId ) => m_globalObject!.GetGlobalInt32 ( objectId );
+
+        [UnmanagedCallersOnly]
+        public static double GetGlobalDouble ( int objectId ) => m_globalObject!.GetGlobalDouble ( objectId );
+
+        [UnmanagedCallersOnly]
+        public static nint GetGlobalString ( int objectId ) => m_globalObject!.GetGlobalString ( objectId );
 
     }
 

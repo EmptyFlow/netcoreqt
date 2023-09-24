@@ -7,7 +7,9 @@ int main(int argc, char *argv[])
     QGuiApplication app(argc, argv);
 
     NetCoreHost host;
-    host.loadAssemblyAndHost("", "");
+    if (!host.loadAssemblyAndHost("NetCoreQtLibrary", "NetCoreQtLibrary")) {
+        return 1;
+    }
 
     QQmlApplicationEngine engine;
     const QUrl url(u"qrc:/netcoreqt/Main.qml"_qs);

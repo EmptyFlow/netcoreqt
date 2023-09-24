@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using System.Runtime.InteropServices;
 using static NetCoreQtLibrary.Helpers;
 
 namespace NetCoreQtLibrary {
@@ -38,6 +39,22 @@ namespace NetCoreQtLibrary {
             var stringValue = StringConversion ( value ) ?? "";
 
             m_strings[objectId].GetSetMethod ()!.Invoke ( m_globalObject, new object[] { stringValue } );
+        }
+
+        public int GetGlobalInt32 ( int objectId ) {
+            var value = m_integers[objectId].GetGetMethod ()!.Invoke ( m_globalObject, null );
+            return value is int result ? result : 0;
+        }
+
+        public double GetGlobalDouble ( int objectId ) {
+            var value = m_integers[objectId].GetGetMethod ()!.Invoke ( m_globalObject, null );
+            return value is double result ? result : 0.0;
+        }
+
+        public nint GetGlobalString ( int objectId ) {
+            var value = m_strings[objectId].GetSetMethod ()!.Invoke ( m_globalObject, null );
+
+            return Marshal.StringToHGlobalUni ( value is string result ? result : "" );
         }
 
     }
