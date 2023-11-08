@@ -1,6 +1,7 @@
 # Specification for schema
 
 Type of definitions:
+* `version` - version of schema
 * `globalObject` - define the fields of a global object (global object is key-value dictionary)
 * `type` - define a type structure (can contains also `method` and `voidmethod` definition inside it)
 * `event` - defining the structure of the event
@@ -8,6 +9,8 @@ Type of definitions:
 
 ## Example of schema
 ```
+version 1.0
+
 globalObject
 int32 Test 1
 int64 Lalalushka 2
