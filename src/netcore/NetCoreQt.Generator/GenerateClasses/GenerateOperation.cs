@@ -10,7 +10,7 @@ namespace NetCoreQt.Generator.GenerateClasses {
     public class GenerateOperation {
 
         public static Task Perform ( GenerateOptions options ) {
-
+            throw new NotImplementedException ();
         }
 
     }

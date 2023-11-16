@@ -8,15 +8,13 @@ NetCoreHost::NetCoreHost(QObject *parent)
 
 bool NetCoreHost::loadAssemblyAndHost(const QString &assemblyName, const QString &assemblyNamespace)
 {
-    if (!load_hostfxr(nullptr)) {
+    if (!load_hostfxr(nullptr, nullptr)) {
         qDebug() << "Failed to load net core host";
         Q_ASSERT(false);
         return 1;
     }
     auto rootPath = QCoreApplication::applicationDirPath();
     auto configPath = rootPath + "/" + assemblyName + ".runtimeconfig.json";
-
-    qDebug() << configPath;
 
     char_t * configPathAsCString = stringToCharPointer(configPath);
 
@@ -32,6 +30,49 @@ bool NetCoreHost::loadAssemblyAndHost(const QString &assemblyName, const QString
     return true;
 }
 
+bool NetCoreHost::loadAssemblyForSelfHosted(const QString& rootPath, const QString &assemblyName, const QString &assemblyNamespace)
+{
+    auto configPath = rootPath + "/" + assemblyName + ".dll";
+    char_t * configPathAsCString = stringToCharPointer(configPath);
+    char_t * rootPathAsCString = stringToCharPointer(rootPath);
+
+    if (!load_hostfxr(configPathAsCString, nullptr)) {
+        qDebug() << "Failed to load net core host";
+        Q_ASSERT(false);
+        return 1;
+    }
+
+    //hostfxr_handle cxt = nullptr;
+    m_context = nullptr;
+    std::vector<const char_t*> args { configPathAsCString };
+    hostfxr_initialize_parameters params { sizeof(hostfxr_initialize_parameters), rootPathAsCString, rootPathAsCString };
+    int rc = init_for_cmd_line_fptr(args.size(), args.data(), &params, &m_context);
+    if (rc != 0 || m_context == nullptr)
+    {
+        std::cerr << "Init failed: " << std::hex << std::showbase << rc << std::endl;
+        close_fptr(m_context);
+        return false;
+    }
+
+    // Get the function pointer to get function pointers
+    rc = get_delegate_fptr(
+        m_context,
+        hdt_get_function_pointer,
+        (void**)&m_getFunctionPointer);
+    if (rc != 0 || m_getFunctionPointer == nullptr) {
+        qDebug() << "Get delegate failed: " << rc;
+        Q_ASSERT(false);
+        return false;
+    }
+
+    return true;
+}
+
+void NetCoreHost::startContext()
+{
+    run_app_fptr(m_context);
+}
+
 bool NetCoreHost::initializeGlobalObject(const QString &className)
 {
     if (!getPointerMethod("NetCoreQtImportGlobal", "SetGlobalInt32", false, setGlobalInt32Pointer)) return false;
@@ -39,6 +80,11 @@ bool NetCoreHost::initializeGlobalObject(const QString &className)
     if (!getPointerMethod("NetCoreQtImportGlobal", "SetGlobalString", false, setGlobalStringPointer)) return false;
 
     return true;
+}
+
+void NetCoreHost::closeContext() const noexcept
+{
+    close_fptr(m_context);
 }
 
 template <typename T>
@@ -86,9 +132,9 @@ void *NetCoreHost::get_export(void *h, const char *name)
 #endif
 }
 
-bool NetCoreHost::load_hostfxr(const char_t *assembly_path)
+bool NetCoreHost::load_hostfxr(const char_t *assembly_path, const char_t * dotnet_root)
 {
-    get_hostfxr_parameters params { sizeof(get_hostfxr_parameters), assembly_path, nullptr };
+    get_hostfxr_parameters params { sizeof(get_hostfxr_parameters), assembly_path, dotnet_root };
     // Pre-allocate a large buffer for the path to hostfxr
     char_t buffer[MAX_PATH];
     size_t buffer_size = sizeof(buffer) / sizeof(char_t);
@@ -102,7 +148,7 @@ bool NetCoreHost::load_hostfxr(const char_t *assembly_path)
     run_app_fptr = (hostfxr_run_app_fn)get_export(lib, "hostfxr_run_app");
     close_fptr = (hostfxr_close_fn)get_export(lib, "hostfxr_close");
 
-    return (init_for_config_fptr && get_delegate_fptr && close_fptr);
+    return (init_for_config_fptr && get_delegate_fptr && close_fptr && init_for_cmd_line_fptr);
 }
 
 load_assembly_and_get_function_pointer_fn NetCoreHost::get_dotnet_load_assembly(const char_t *config_path)
@@ -135,4 +181,9 @@ char_t *NetCoreHost::stringToCharPointer(const QString &value) noexcept
     result[value.size()] = L'\0';
 
     return result;
+}
+
+void NetCoreHost::startLoadedContext()
+{
+    startContext();
 }

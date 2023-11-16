@@ -7,11 +7,23 @@ int main(int argc, char *argv[])
     QGuiApplication app(argc, argv);
 
     NetCoreHost host;
-    if (!host.loadAssemblyAndHost("NetCoreQtLibrary", "NetCoreQtLibrary")) {
+    //if (!host.loadAssemblyAndHost("NetCoreQtLibrary", "NetCoreQtLibrary")) {
+    auto root = QCoreApplication::applicationDirPath() + "/netcore";
+    if (!host.loadAssemblyForSelfHosted(root, "NetCoreQtLibrary", "NetCoreQtLibrary")) {
         return 1;
     }
 
-    QQmlApplicationEngine engine;
+    qDebug() << "LOADED!!!!";
+
+    host.startContext();
+
+    qDebug() << "FINISHED!!!!";
+
+    host.closeContext();
+
+    return 0;
+
+    /*QQmlApplicationEngine engine;
     const QUrl url(u"qrc:/netcoreqt/Main.qml"_qs);
     QObject::connect(
         &engine,
@@ -21,5 +33,5 @@ int main(int argc, char *argv[])
         Qt::QueuedConnection);
     engine.load(url);
 
-    return app.exec();
+    return app.exec();*/
 }

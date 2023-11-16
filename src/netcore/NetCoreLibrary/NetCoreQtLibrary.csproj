@@ -1,10 +1,12 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
 		<TargetFramework>net7.0</TargetFramework>
-		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 		<EnableDynamicLoading>true</EnableDynamicLoading>
+		<OutputType>Exe</OutputType>
+		<StartupObject>NetCoreQtLibrary.Program</StartupObject>
+		<RuntimeIdentifiers>win7-x86;win7-x64;win10-x86;win10-x64;win-x64;win-x86</RuntimeIdentifiers>
 	</PropertyGroup>
 
 </Project>
