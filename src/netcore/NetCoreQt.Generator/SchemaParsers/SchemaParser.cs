@@ -16,9 +16,14 @@ namespace NetCoreQt.Generator.SchemaParsers {
                 .Replace ( "\r", "" ) // fix for Windows \n\r format
                 .Split ( '\n' );
 
-            //var versionLine = content.
+            if ( !m_lines.Any () ) throw new Exception ( "Schema is empty! I guess if you need something you need to fill out the schema first!" );
 
-            var schema = new GenerateSchema ();
+            var versionLine = m_lines.First ().Split ( " " );
+            if ( versionLine.Length != 2 ) throw new Exception ( "Schema version not filled or not relevant! Version defined in format: version X.X. Example: version 1.0" );
+
+            var schema = new GenerateSchema {
+                Version = versionLine.Last ().Trim ()
+            };
             var parser = new Schema1dot0Parser ();
 
             while ( m_lineIndex < m_lines.Count () ) {

@@ -1,5 +1,4 @@
 using NetCoreQt.Generator.SchemaParsers;
-using System.ComponentModel;
 
 namespace NetCoreQt.Generator.UnitTests {
 
