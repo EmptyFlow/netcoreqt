@@ -7,7 +7,7 @@ namespace NetCoreQtLibrary {
 
         public static async Task Main ( string[] args ) {
             await Task.Delay ( 10000 );
-            File.WriteAllText ( "C:/work/testlalala.txt", "pizda!!!" );
+            File.WriteAllText ( "C:/work/testlalala.txt", "!!!" );
         }
 
     }

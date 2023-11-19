@@ -3,12 +3,14 @@
     /// <summary>
     /// Parsed schema for generation.
     /// </summary>
-    public record GenerateSchema {
+    internal record GenerateSchema {
 
         /// <summary>
         /// Version of schema.
         /// </summary>
         public string Version { get; init; } = "";
+
+        public List<GenerateEvent> Events { get; set; } = new List<GenerateEvent>();
 
     }
 

@@ -1,6 +1,9 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
+using System.Threading;
+using static NetCoreQtLibrary.ConceptOfClassExternal;
 
 namespace NetCoreQtLibrary {
 
@@ -27,8 +30,6 @@ namespace NetCoreQtLibrary {
         }
 
         public delegate void SetIdDelegate ( IntPtr value );
-
-        public static SetIdDelegate? setIdDelegateHandler = null;
 
         [UnmanagedCallersOnly]
         public static void SetIdCallback ( IntPtr index, IntPtr callback ) {
@@ -59,7 +60,7 @@ namespace NetCoreQtLibrary {
             }
             set {
                 value = m_id;
-                ConceptOfClassExternal.PerformIdCallback ( m_index, m_id );
+                PerformIdCallback ( m_index, m_id );
             }
         }
 
@@ -67,24 +68,41 @@ namespace NetCoreQtLibrary {
 
     public static class ConceptOfEventExternal {
 
-        public static Dictionary<int, ConceptOfEvent> m_events = new ();
+        private static ConcurrentDictionary<int, ConceptOfEvent> m_events = new ();
+
+        private static int m_counter = 0;
 
         [UnmanagedCallersOnly]
         public static IntPtr GetId ( IntPtr index ) {
             var id = index.ToInt32 ();
-            if ( !m_events.ContainsKey ( id ) ) return -1;
+            if ( m_events.TryGetValue ( id, out var value ) ) return value.Id;
 
-            return m_events[id].Id;
+            return -1;
         }
 
         [UnmanagedCallersOnly]
         public static void CompleteEvent ( IntPtr index ) {
             var id = index.ToInt32 ();
-            if ( m_events.ContainsKey ( id ) ) m_events.Remove ( id );
+            if ( !m_events.ContainsKey ( id ) ) return;
+
+            m_events.TryRemove ( id, out var _ );
         }
 
-        public static void Create ( ConceptOfEvent newEvent ) {
-            m_events.Add ( 1, newEvent );
+        public delegate void FireEventDelegate ( IntPtr value );
+
+        public static FireEventDelegate? fireEventDelegateHandler = null;
+
+        [UnmanagedCallersOnly]
+        public static void FireEventCallback ( IntPtr callback ) {
+            fireEventDelegateHandler = Marshal.GetDelegateForFunctionPointer<FireEventDelegate> ( callback );
+        }
+
+        public static int Create ( ConceptOfEvent newEvent ) {
+            var value = Interlocked.Increment ( ref m_counter );
+            if ( !m_events.TryAdd ( value, newEvent ) ) throw new Exception ( $"Can't create event with index {value}" );
+
+            fireEventDelegateHandler?.Invoke ( value );
+            return value;
         }
 
     }
@@ -111,69 +129,6 @@ namespace NetCoreQtLibrary {
         public static void Deinitialize () {
             // remove all unmanaged
         }
-
-    }
-
-    public static class NetCoreQtImportGlobal {
-
-        private static GlobalObject? m_globalObject = null;
-
-        public static void SetGlobalObject ( GlobalObject globalObject ) => m_globalObject = globalObject;
-
-        [UnmanagedCallersOnly]
-        public static void SetGlobalInt32 ( int objectId, int value ) => m_globalObject!.SetGlobalInt32 ( objectId, value );
-
-        [UnmanagedCallersOnly]
-        public static void SetGlobalDouble ( int objectId, double value ) => m_globalObject!.SetGlobalDouble ( objectId, value );
-
-        [UnmanagedCallersOnly]
-        public static void SetGlobalString ( int objectId, nint value ) => m_globalObject!.SetGlobalString ( objectId, value );
-
-        [UnmanagedCallersOnly]
-        public static int GetGlobalInt32 ( int objectId ) => m_globalObject!.GetGlobalInt32 ( objectId );
-
-        [UnmanagedCallersOnly]
-        public static double GetGlobalDouble ( int objectId ) => m_globalObject!.GetGlobalDouble ( objectId );
-
-        [UnmanagedCallersOnly]
-        public static nint GetGlobalString ( int objectId ) => m_globalObject!.GetGlobalString ( objectId );
-
-    }
-
-    public static class NetCoreQtExportGlobal {
-
-        [UnmanagedCallersOnly]
-        public static void SetGlobalInt32Method ( nint value ) => SetGlobalInt32DelegatePointer = Marshal.GetDelegateForFunctionPointer<SetGlobalInt32Delegate> ( value );
-
-        [UnmanagedCallersOnly]
-        public static void SetGlobalDoubleMethod ( nint value ) => SetGlobalDoubleDelegatePointer = Marshal.GetDelegateForFunctionPointer<SetGlobalDoubleDelegate> ( value );
-
-        [UnmanagedCallersOnly]
-        public static void SetGlobalStringMethod ( nint value ) => SetGlobalStringDelegatePointer = Marshal.GetDelegateForFunctionPointer<SetGlobalStringDelegate> ( value );
-
-        private delegate void SetGlobalInt32Delegate ( int objectId, int value );
-
-        private delegate void SetGlobalDoubleDelegate ( int objectId, double value );
-
-        private delegate void SetGlobalStringDelegate ( int objectId, nint value );
-
-        private static SetGlobalInt32Delegate SetGlobalInt32DelegatePointer = SetGlobalInt32DelegatePointerEmpty;
-
-        private static SetGlobalDoubleDelegate SetGlobalDoubleDelegatePointer = SetGlobalDoubleDelegatePointerEmpty;
-
-        private static SetGlobalStringDelegate SetGlobalStringDelegatePointer = SetGlobalStringDelegatePointerEmpty;
-
-        public static void SetGlobalInt32 ( int objectId, int value ) => SetGlobalInt32DelegatePointer ( objectId, value );
-
-        public static void SetGlobalDouble ( int objectId, double value ) => SetGlobalDoubleDelegatePointer ( objectId, value );
-
-        public static void SetGlobalString ( int objectId, nint value ) => SetGlobalStringDelegatePointer ( objectId, value );
-
-        private static void SetGlobalInt32DelegatePointerEmpty ( int objectId, int value ) { }
-
-        private static void SetGlobalDoubleDelegatePointerEmpty ( int objectId, double value ) { }
-
-        private static void SetGlobalStringDelegatePointerEmpty ( int objectId, nint value ) { }
 
     }
 

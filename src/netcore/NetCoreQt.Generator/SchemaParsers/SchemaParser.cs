@@ -1,29 +1,47 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace NetCoreQt.Generator.SchemaParsers {
+﻿namespace NetCoreQt.Generator.SchemaParsers {
 
     public class SchemaParser {
 
-        public async Task<GenerateSchema> ParseAsync(string fileName ) {
-            var content = await File.ReadAllTextAsync( fileName );
+        private IEnumerable<string> m_lines = new List<string> ();
 
-            var versionLine = content.
+        private int m_lineIndex = 0;
 
-            return new GenerateSchema {
+        internal async Task<GenerateSchema> ParseAsync ( string fileName ) {
+            var content = await File.ReadAllTextAsync ( fileName );
 
-            };
+            m_lines = content.Split ( '\n' );
+
+            //var versionLine = content.
+
+            var schema = new GenerateSchema ();
+            var parser = new Schema1dot0Parser ();
+
+            while ( m_lineIndex < m_lines.Count () ) {
+                var entityLine = GetNextEntityLine ();
+                switch ( entityLine ) {
+                    case EntityLine.Event:
+                        schema.Events.Add ( parser.ParseEvent ( NextLine (), this ) );
+                        break;
+                }
+            }
+
+            return schema;
         }
 
-        public GenerateSchema Parse ( string fileName ) {
-            return null;
+        internal EntityLine GetNextEntityLine () {
+            if (m_lineIndex == m_lines.Count() - 1) return EntityLine.EndLine;
+
+            var line = m_lines.ElementAt ( m_lineIndex + 1 );
+            if ( Schema1dot0Parser.IsEvent ( line ) ) return EntityLine.Event;
+
+            return EntityLine.Unknown;
         }
 
-        public string NextLine () {
-            return "";
+        internal string GetCurrentLine () => m_lines.ElementAt ( m_lineIndex );
+
+        internal string NextLine () {
+            m_lineIndex += 1;
+            return m_lines.ElementAt ( m_lineIndex );
         }
 
     }

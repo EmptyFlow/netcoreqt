@@ -1,4 +1,11 @@
 ﻿namespace NetCoreQt.Generator.SchemaParsers {
-    internal class GenerateEventProperty {
+
+    internal record GenerateEventProperty {
+
+        public string Name { get; init; } = "";
+
+        public PropertyType Type { get; init; } = PropertyType.Unknown;
+
     }
+
 }
