@@ -1,4 +1,7 @@
-﻿namespace NetCoreQt.Generator.SchemaParsers {
+﻿using System.Runtime.CompilerServices;
+
+[assembly: InternalsVisibleTo ( "NetCoreQt.Generator.UnitTests" )]
+namespace NetCoreQt.Generator.SchemaParsers {
 
     public class SchemaParser {
 
@@ -6,10 +9,12 @@
 
         private int m_lineIndex = 0;
 
-        internal async Task<GenerateSchema> ParseAsync ( string fileName ) {
-            var content = await File.ReadAllTextAsync ( fileName );
+        internal async Task<GenerateSchema> ParseAsync ( string fileName ) => ParseSchema ( await File.ReadAllTextAsync ( fileName ) );
 
-            m_lines = content.Split ( '\n' );
+        internal GenerateSchema ParseSchema ( string content ) {
+            m_lines = content
+                .Replace ( "\r", "" ) // fix for Windows \n\r format
+                .Split ( '\n' );
 
             //var versionLine = content.
 
@@ -18,6 +23,8 @@
 
             while ( m_lineIndex < m_lines.Count () ) {
                 var entityLine = GetNextEntityLine ();
+                if ( entityLine == EntityLine.EndLine ) break;
+
                 switch ( entityLine ) {
                     case EntityLine.Event:
                         schema.Events.Add ( parser.ParseEvent ( NextLine (), this ) );
@@ -29,7 +36,7 @@
         }
 
         internal EntityLine GetNextEntityLine () {
-            if (m_lineIndex == m_lines.Count() - 1) return EntityLine.EndLine;
+            if ( m_lineIndex == m_lines.Count () - 1 ) return EntityLine.EndLine;
 
             var line = m_lines.ElementAt ( m_lineIndex + 1 );
             if ( Schema1dot0Parser.IsEvent ( line ) ) return EntityLine.Event;

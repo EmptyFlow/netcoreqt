@@ -32,7 +32,9 @@
         // event TestEvent cs,cpp
         // int32 Test
 
-        private GenerateEventProperty ParseEventProperty ( string line ) {
+        private GenerateEventProperty? ParseEventProperty ( string line ) {
+            if ( string.IsNullOrEmpty ( line ) ) return null;
+
             var span = line.AsSpan ();
             var spaceIndex = span.IndexOf ( ' ' );
             if ( spaceIndex == -1 ) throw new Exception ( "Event property must be in format: <property type> <propertyName>. Example: int32 MyProperty" );
@@ -43,14 +45,15 @@
             if ( !m_types.Contains ( propertyType.ToString () ) ) throw new Exception ( $"Event property must be with valid type! Allowed types: {Int32Definition}, {Int64Definition}, {DoubleDefinition}, {StringDefinition}" );
 
             return new GenerateEventProperty {
-                Name = propertyName.ToString (),
+                Name = propertyName.ToString ().Replace ( "\r", "" ),
                 Type = GetTypeFromString ( propertyType.ToString () )
             };
         }
 
         internal GenerateEvent ParseEvent ( string startLine, SchemaParser parser ) {
             var span = startLine.AsSpan ();
-            var eventSetup = span[EventDefinition.Length..];
+            var definitionLength = EventDefinition.Length + 1;
+            var eventSetup = span[definitionLength..];
             var spaceIndex = eventSetup.IndexOf ( ' ' );
             string? name;
             var hostLanguages = new List<string> ();
@@ -69,7 +72,8 @@
                 var entityLine = parser.GetNextEntityLine ();
                 if ( entityLine != EntityLine.Unknown ) break;
 
-                properties.Add ( ParseEventProperty ( parser.NextLine () ) );
+                var property = ParseEventProperty ( parser.NextLine () );
+                if ( property != null ) properties.Add ( property );
             }
 
             return new GenerateEvent {

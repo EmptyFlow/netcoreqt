@@ -5,7 +5,9 @@ VisualStudioVersion = 17.7.34024.191
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NetCoreQtLibrary", "NetCoreQtLibrary.csproj", "{2BA76066-1F95-4582-A7D4-6847413F8FCD}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NetCoreQt.Generator", "..\NetCoreQt.Generator\NetCoreQt.Generator.csproj", "{938C3B76-E0AF-460F-87BE-4944939F8EFE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NetCoreQt.Generator", "..\NetCoreQt.Generator\NetCoreQt.Generator.csproj", "{938C3B76-E0AF-460F-87BE-4944939F8EFE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NetCoreQt.Generator.UnitTests", "..\NetCoreQt.Generator.UnitTests\NetCoreQt.Generator.UnitTests.csproj", "{96223B87-B877-4274-875B-A55C59922A72}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +23,10 @@ Global
 		{938C3B76-E0AF-460F-87BE-4944939F8EFE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{938C3B76-E0AF-460F-87BE-4944939F8EFE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{938C3B76-E0AF-460F-87BE-4944939F8EFE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{96223B87-B877-4274-875B-A55C59922A72}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{96223B87-B877-4274-875B-A55C59922A72}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{96223B87-B877-4274-875B-A55C59922A72}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{96223B87-B877-4274-875B-A55C59922A72}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
