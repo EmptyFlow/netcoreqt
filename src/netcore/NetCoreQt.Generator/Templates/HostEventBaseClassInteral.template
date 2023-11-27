@@ -1,0 +1,40 @@
+﻿    {EventModifiers} record {EventName} {
+
+        {EventProperties}
+
+    }
+
+    public static class {EventName}External {
+
+        private static ConcurrentDictionary<int, ConceptOfEvent> m_events = new ();
+
+        private static volatile int m_counter;
+
+        private delegate void FireEventDelegate ( IntPtr value );
+
+        private static FireEventDelegate? m_fireEventDelegateHandler;
+
+        [UnmanagedCallersOnly]
+        public static void CompleteEvent ( IntPtr index ) {
+            var id = index.ToInt32 ();
+            if ( !m_events.ContainsKey ( id ) ) return;
+
+            m_events.TryRemove ( id, out var _ );
+        }
+
+        [UnmanagedCallersOnly]
+        public static void FireEventCallback ( IntPtr callback ) {
+            fireEventDelegateHandler = Marshal.GetDelegateForFunctionPointer<FireEventDelegate> ( callback );
+        }
+
+        {EventExternalProperties}
+
+        public static int Create ( ConceptOfEvent newEvent ) {
+            var value = Interlocked.Increment ( ref m_counter );
+            if ( !m_events.TryAdd ( value, newEvent ) ) throw new Exception ( $"Can't create event with index {value}" );
+
+            fireEventDelegateHandler?.Invoke ( value );
+            return value;
+        }
+
+    }
