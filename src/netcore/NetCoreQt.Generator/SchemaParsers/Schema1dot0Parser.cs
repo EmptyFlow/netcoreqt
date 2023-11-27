@@ -53,6 +53,8 @@
         internal GenerateEvent ParseEvent ( string startLine, SchemaParser parser ) {
             var span = startLine.AsSpan ();
             var definitionLength = EventDefinition.Length + 1;
+            if ( span.Length <= definitionLength ) throw new Exception ( "Name of event is empty. Format for name of event is: event <eventName>. Example: event MyEvent" );
+
             var eventSetup = span[definitionLength..];
             var spaceIndex = eventSetup.IndexOf ( ' ' );
             string? name;

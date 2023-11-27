@@ -5,6 +5,100 @@ namespace NetCoreQt.Generator.UnitTests {
     public class SchemaParserUnitTest {
 
         [Fact, Trait ( "Category", "UnitTest" )]
+        public void ParseSchema_Failed_Event_EmptyEventName_Case1 () {
+            //arrange
+            var parser = new SchemaParser ();
+            var schema =
+"""
+version 1.0
+event
+""";
+            //assert
+            Assert.Throws<Exception> (
+                () => {
+                    //act
+                    var result = parser.ParseSchema ( schema );
+                }
+            );
+        }
+
+        [Fact, Trait ( "Category", "UnitTest" )]
+        public void ParseSchema_Failed_Event_EmptyEventName_Case2 () {
+            //arrange
+            var parser = new SchemaParser ();
+            var schema =
+"""
+version 1.0
+event 
+""";
+            //assert
+            Assert.Throws<Exception> (
+                () => {
+                    //act
+                    var result = parser.ParseSchema ( schema );
+                }
+            );
+        }
+
+        [Fact, Trait ( "Category", "UnitTest" )]
+        public void ParseSchema_Failed_Event_EmptyEventName_Case3 () {
+            //arrange
+            var parser = new SchemaParser ();
+            var schema =
+"""
+version 1.0
+event     
+""";
+            //assert
+            Assert.Throws<Exception> (
+                () => {
+                    //act
+                    var result = parser.ParseSchema ( schema );
+                }
+            );
+        }
+
+        [Fact, Trait ( "Category", "UnitTest" )]
+        public void ParseSchema_Failed_Event_EmptyEventPropertyName_Case1 () {
+            //arrange
+            var parser = new SchemaParser ();
+            var schema =
+"""
+version 1.0
+event Test
+lalala
+""";
+            //assert
+            var exception = Assert.Throws<Exception> (
+                () => {
+                    //act
+                    var result = parser.ParseSchema ( schema );
+                }
+            );
+            Assert.Equal ( "Event property must be in format: <property type> <propertyName>. Example: int32 MyProperty", exception.Message );
+        }
+
+        [Fact, Trait ( "Category", "UnitTest" )]
+        public void ParseSchema_Failed_Event_EmptyEventPropertyName_Case2 () {
+            //arrange
+            var parser = new SchemaParser ();
+            var schema =
+"""
+version 1.0
+event Test
+lalalaa Property
+""";
+            //assert
+            var exception = Assert.Throws<Exception> (
+                () => {
+                    //act
+                    var result = parser.ParseSchema ( schema );
+                }
+            );
+            Assert.Equal ( "Event property must be with valid type! Allowed types: int32, int64, double, string", exception.Message );
+        }
+
+        [Fact, Trait ( "Category", "UnitTest" )]
         public void ParseSchema_Success_Event_Empty () {
             //arrange
             var parser = new SchemaParser ();
@@ -104,7 +198,7 @@ double Prop4
             //assert
             Assert.NotNull ( result );
             Assert.NotEmpty ( result.Events );
-            Assert.Equal (2, result.Events.Count );
+            Assert.Equal ( 2, result.Events.Count );
 
             var firstEventSchema = result.Events.First ();
             Assert.Equal ( "TestEvent", firstEventSchema.Name );
