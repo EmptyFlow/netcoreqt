@@ -18,15 +18,16 @@
             //arrange
             var counterId = ConveptOfEventExternal.m_counter;
             ConveptOfEventExternal.Create ( new ConceptOfEvent { IntValue = 9 } );
-            ConveptOfEventExternal.m_counter -= 1;
+            Interlocked.Decrement ( ref ConveptOfEventExternal.m_counter );
 
             //assert
-            Assert.Throws<Exception> (
+            var exception = Assert.Throws<Exception> (
                 () => {
                     //act
                     ConveptOfEventExternal.Create ( new ConceptOfEvent { IntValue = 10 } );
                 }
             );
+            Assert.StartsWith( "Can't create event with index", exception.Message );
         }
 
         [Fact]

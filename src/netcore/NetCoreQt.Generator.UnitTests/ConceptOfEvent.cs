@@ -13,7 +13,7 @@ namespace NetCoreQt.Generator.UnitTests {
 
         public static ConcurrentDictionary<int, ConceptOfEvent> m_events = new ();
 
-        public static volatile int m_counter;
+        public static int m_counter;
 
         public delegate void FireEventDelegate ( IntPtr value );
 
