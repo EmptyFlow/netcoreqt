@@ -45,12 +45,13 @@ namespace NetCoreQt.Generator.CodeSaver {
         }
 
         private static async Task GenerateCsharpFiles ( string targetFolder, GeneratedResultLanguage generatedResultLanguage ) {
+            if ( !Directory.Exists ( targetFolder ) ) Directory.CreateDirectory ( targetFolder );
+
             foreach ( var item in generatedResultLanguage.Events ) {
                 var resultFile = Path.Combine ( targetFolder, $"Event.{item.Key}.cs" );
-                if ( !Directory.Exists ( targetFolder ) ) Directory.CreateDirectory ( targetFolder );
                 if ( File.Exists ( resultFile ) ) File.Delete ( resultFile );
 
-                using var stream = File.OpenRead ( resultFile );
+                using var stream = File.OpenWrite ( resultFile );
                 using var writer = new StreamWriter ( stream );
 
                 await writer.WriteLineAsync ( "namespace NetCoreQt.Generator.CodeSaver {\n" );
