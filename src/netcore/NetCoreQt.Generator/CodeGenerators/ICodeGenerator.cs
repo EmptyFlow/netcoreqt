@@ -10,7 +10,7 @@ namespace NetCoreQt.Generator.CodeGenerators {
         /// <summary>
         /// Generate only classes.
         /// </summary>
-        Task GenerateOnlyClasses ( IEnumerable<string> languages, GenerateSchema schema );
+        GeneratedResult GenerateClasses ( IEnumerable<string> languages, GenerateSchema schema );
 
         /// <summary>
         /// Generate projects.

@@ -1,65 +1,41 @@
 ﻿using NetCoreQt.Generator.SchemaParsers;
+using System.Runtime.CompilerServices;
 using System.Text;
 
+[assembly: InternalsVisibleTo ( "NetCoreQt.Generator.UnitTests" )]
 namespace NetCoreQt.Generator.CodeGenerators {
 
     internal class CodeGenerator : ICodeGenerator {
 
-        private const string CsLanguage = "cs";
+        public const string CsLanguage = "cs";
 
-        private const string CppLanguage = "cpp";
-
-        private readonly Dictionary<string, string> m_events = new ();
+        public const string CppLanguage = "cpp";
 
         public Task GenerateClassesWithProjects ( IEnumerable<string> languages, GenerateSchema schema ) {
             throw new NotImplementedException ();
         }
 
-        public Task GenerateOnlyClasses ( IEnumerable<string> languages, GenerateSchema schema ) {
-            m_events.Clear ();
+        public GeneratedResult GenerateClasses ( IEnumerable<string> languages, GenerateSchema schema ) {
+            var result = new GeneratedResult ();
 
             if ( schema.Events.Any () ) {
                 foreach ( var language in languages ) {
                     switch ( language ) {
                         case CsLanguage:
-                            GenerateCsClasses ( schema );
+                            GenerateCsClasses ( schema, result.CsLanguage );
                             break;
                         case CppLanguage:
-                            GenerateCppClasses ( schema );
+                            GenerateCppClasses ( schema, result.CppLanguage );
                             break;
                         default: throw new NotImplementedException ();
                     }
                 }
             }
 
-            return Task.CompletedTask;
+            return result;
         }
 
-        private static string m_eventHostTemplate = "";
-
-        private static string GetContentFromTemplate ( string templateName ) {
-            if ( templateName == null ) throw new ArgumentNullException ( nameof ( templateName ) );
-
-            var assembly = typeof ( CodeGenerator ).Assembly;
-            if ( assembly == null ) return "";
-
-            using var stream = assembly.GetManifestResourceStream ( templateName );
-            if ( stream == null ) return "";
-
-            using StreamReader reader = new ( stream );
-
-            return reader.ReadToEnd ();
-        }
-
-        private static string GetEventHostTemplate () {
-            if ( string.IsNullOrEmpty ( m_eventHostTemplate ) ) {
-                m_eventHostTemplate = GetContentFromTemplate ( "NetCoreQt.Generator.Templates.HostEventBaseClassInteral.template" );
-            }
-
-            return m_eventHostTemplate;
-        }
-
-        private Task GenerateCsClasses ( GenerateSchema schema ) {
+        private Task GenerateCsClasses ( GenerateSchema schema, GeneratedResultLanguage result ) {
             foreach ( var item in schema.Events ) {
                 string generatedEvent;
                 if ( item.HostLanguages.Contains ( CsLanguage ) ) {
@@ -67,7 +43,10 @@ namespace NetCoreQt.Generator.CodeGenerators {
                 } else {
                     generatedEvent = GenerateCsGuestEvent ( item );
                 }
-                m_events.Add ( CsLanguage, generatedEvent );
+
+                if ( result.Events.ContainsKey ( item.Name ) ) continue;
+
+                result.Events.Add ( item.Name, generatedEvent );
             }
 
             return Task.CompletedTask;
@@ -104,7 +83,7 @@ namespace NetCoreQt.Generator.CodeGenerators {
                 fireEventDelegateHandler = Marshal.GetDelegateForFunctionPointer<FireEventDelegate> ( callback );
             }
 
-            {{GetExternalProperties ( item.Properties )}}
+{{GetExternalProperties ( item.Properties )}}
 
             public static int Create ( {{item.Name}} newEvent ) {
                 var value = Interlocked.Increment ( ref m_counter );
@@ -153,10 +132,10 @@ namespace NetCoreQt.Generator.CodeGenerators {
                     {{GetTypeNIntReturn ( property.Type, property.Name )}}
                 }
 
-                return -1;
+                return 0;
             }
 """;
-                    builder.AppendLine ();
+                    builder.AppendLine ( externalProperty );
                 }
 
                 return builder.ToString ();
@@ -164,7 +143,7 @@ namespace NetCoreQt.Generator.CodeGenerators {
 
         }
 
-        private void GenerateCppClasses ( GenerateSchema schema ) {
+        private void GenerateCppClasses ( GenerateSchema schema, GeneratedResultLanguage result ) {
             throw new NotImplementedException ();
         }
 
