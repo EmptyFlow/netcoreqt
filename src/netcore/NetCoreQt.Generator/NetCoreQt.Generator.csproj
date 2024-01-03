@@ -12,6 +12,8 @@
 		<RepositoryUrl>https://github.com/EmptyFlow/netcoreqt</RepositoryUrl>
 		<Description>Console tool for generating project and files from nqs files</Description>
 		<Version>0.0.1</Version>
+		<Company>EmptyFlow</Company>
+		<Product>NetCoreQt</Product>
 	</PropertyGroup>
 
 	<ItemGroup>

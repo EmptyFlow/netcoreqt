@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "NetCoreQt.Generator": {
+      "commandName": "Project",
+      "commandLineArgs": "--help"
+    }
+  }
+}
