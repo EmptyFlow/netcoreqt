@@ -8,7 +8,7 @@ int main(int argc, char *argv[])
 
     NetCoreHost host;
     //if (!host.loadAssemblyAndHost("NetCoreQtLibrary", "NetCoreQtLibrary")) {
-    auto root = QCoreApplication::applicationDirPath() + "/netcore";
+    auto root = "../../dlls"; //QCoreApplication::applicationDirPath() + "/netcore";
     if (!host.loadAssemblyForSelfHosted(root, "NetCoreQtLibrary", "NetCoreQtLibrary")) {
         return 1;
     }

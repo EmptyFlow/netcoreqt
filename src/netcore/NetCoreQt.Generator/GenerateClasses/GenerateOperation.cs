@@ -38,7 +38,7 @@ namespace NetCoreQt.Generator.GenerateClasses {
             }
 
             var codeGenerator = new CodeGenerator ();
-            var generateResult = codeGenerator.GenerateClasses ( new List<string> (), schema );
+            var generateResult = codeGenerator.GenerateClasses ( new List<string> { "cs" }, schema );
 
             var codeSaverOptions = new CodeSaverOptions {
                 Languages = new Dictionary<string, CodeSaverLanguage> {

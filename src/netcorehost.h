@@ -46,6 +46,7 @@ public:
     void startContext();
     template <typename T>
     bool getPointerMethod(const QString &className, const QString &methodName, bool haveDelegate, T delegate);
+    bool getVoidPointerMethod(const QString &className, const QString &methodName, bool haveDelegate, void** delegate);
     bool initializeGlobalObject(const QString &className);
     void setGlobalInt32(int objectId, int value) const { setGlobalInt32Pointer(objectId, value); }
     void setGlobalDouble(int objectId, double value) const { setGlobalDoublePointer(objectId, value); }
@@ -56,7 +57,7 @@ private:
     void *load_library(const char_t *path);
     void *get_export(void *h, const char *name);
     bool load_hostfxr(const char_t *assembly_path, const char_t * dotnet_root);
-    load_assembly_and_get_function_pointer_fn get_dotnet_load_assembly(const char_t *config_path);
+    load_assembly_and_get_function_pointer_fn loadNetAssembly(const char_t *config_path);
     char_t *stringToCharPointer(const QString &value) noexcept;
 
 signals:

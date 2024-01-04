@@ -1,0 +1,4 @@
+﻿version 1.0
+event MyEvent cs
+int32 Count
+int64 Distance

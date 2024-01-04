@@ -20,6 +20,7 @@ qt_add_qml_module(appnetcoreqt
     URI netcoreqt
     VERSION 1.0
     QML_FILES Main.qml
+    SOURCES concepthostevent.h
 )
 
 set_target_properties(appnetcoreqt PROPERTIES

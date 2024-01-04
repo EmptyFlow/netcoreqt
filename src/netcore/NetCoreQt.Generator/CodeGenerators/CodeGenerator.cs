@@ -62,34 +62,34 @@ namespace NetCoreQt.Generator.CodeGenerators {
 
         public static class {{item.Name}}External {
 
-            private static ConcurrentDictionary<int, {{item.Name}}> m_events = new ();
+            private static System.Collections.Concurrent.ConcurrentDictionary<int, {{item.Name}}> m_events = new ();
 
             private static int m_counter;
 
-            private delegate void FireEventDelegate ( IntPtr value );
+            private delegate void FireEventDelegate ( nint value );
 
             private static FireEventDelegate? m_fireEventDelegateHandler;
 
-            [UnmanagedCallersOnly]
-            public static void CompleteEvent ( IntPtr index ) {
+            [System.Runtime.InteropServices.UnmanagedCallersOnly]
+            public static void CompleteEvent ( nint index ) {
                 var id = index.ToInt32 ();
                 if ( !m_events.ContainsKey ( id ) ) return;
 
                 m_events.TryRemove ( id, out var _ );
             }
 
-            [UnmanagedCallersOnly]
-            public static void FireEventCallback ( IntPtr callback ) {
-                fireEventDelegateHandler = Marshal.GetDelegateForFunctionPointer<FireEventDelegate> ( callback );
+            [System.Runtime.InteropServices.UnmanagedCallersOnly]
+            public static void FireEventCallback ( nint callback ) {
+                m_fireEventDelegateHandler = System.Runtime.InteropServices.Marshal.GetDelegateForFunctionPointer<FireEventDelegate> ( callback );
             }
 
 {{GetExternalProperties ( item.Properties )}}
 
             public static int Create ( {{item.Name}} newEvent ) {
-                var value = Interlocked.Increment ( ref m_counter );
-                if ( !m_events.TryAdd ( value, newEvent ) ) throw new Exception ( $"Can't create event with index {value}" );
+                var value = System.Threading.Interlocked.Increment ( ref m_counter );
+                if ( !m_events.TryAdd ( value, newEvent ) ) throw new System.Exception ( $"Can't create event with index {value}" );
 
-                fireEventDelegateHandler?.Invoke ( value );
+                m_fireEventDelegateHandler?.Invoke ( value );
                 return value;
             }
 
@@ -115,9 +115,9 @@ namespace NetCoreQt.Generator.CodeGenerators {
             static string GetTypeNIntReturn ( PropertyType type, string name ) {
                 return type switch {
                     PropertyType.Int32 => $"return value.{name};",
-                    PropertyType.Int64 => $"return value.{name};",
-                    PropertyType.Double => $"return value.{name};",
-                    PropertyType.String => $"return Marshal.StringToHGlobalUni ( value.{name} is string result ? result : \"\" )",
+                    PropertyType.Int64 => $"return (nint)value.{name};",
+                    PropertyType.Double => $"return (nint)value.{name};",
+                    PropertyType.String => $"return System.Runtime.InteropServices.Marshal.StringToHGlobalUni ( value.{name} is string result ? result : \"\" )",
                     _ => ""
                 };
             }
@@ -126,8 +126,8 @@ namespace NetCoreQt.Generator.CodeGenerators {
                 var builder = new StringBuilder ();
                 foreach ( var property in properties ) {
                     var externalProperty = $$"""
-            [UnmanagedCallersOnly]
-            public static void Get{{property.Name}} ( IntPtr index ) {
+            [System.Runtime.InteropServices.UnmanagedCallersOnly]
+            public static nint Get{{property.Name}} ( nint index ) {
                 if ( m_events.TryGetValue ( index.ToInt32 (), out var value ) ) {
                     {{GetTypeNIntReturn ( property.Type, property.Name )}}
                 }

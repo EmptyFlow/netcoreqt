@@ -18,7 +18,7 @@ bool NetCoreHost::loadAssemblyAndHost(const QString &assemblyName, const QString
 
     char_t * configPathAsCString = stringToCharPointer(configPath);
 
-    load_assembly_and_get_function_pointer = get_dotnet_load_assembly(configPathAsCString);
+    load_assembly_and_get_function_pointer = loadNetAssembly(configPathAsCString);
 
     Q_ASSERT(load_assembly_and_get_function_pointer != nullptr);
     if (load_assembly_and_get_function_pointer == nullptr) return false;
@@ -71,6 +71,24 @@ bool NetCoreHost::loadAssemblyForSelfHosted(const QString& rootPath, const QStri
 void NetCoreHost::startContext()
 {
     run_app_fptr(m_context);
+}
+
+bool NetCoreHost::getVoidPointerMethod(const QString &className, const QString &methodName, bool haveDelegate, void **delegate)
+{
+    qDebug() << loadedAssemblyPath;
+    qDebug() << loadedAssemblyNamespace + "." + className + ", " + loadedAssemblyName;
+
+    auto rc = load_assembly_and_get_function_pointer(
+        stringToCharPointer(loadedAssemblyPath),
+        stringToCharPointer(loadedAssemblyNamespace + "." + className + ", " + loadedAssemblyName),
+        stringToCharPointer(methodName),
+        haveDelegate ? stringToCharPointer(loadedAssemblyNamespace + "." + className + "+" + className + "Delegate, " + loadedAssemblyName) : UNMANAGEDCALLERSONLY_METHOD,
+        nullptr,
+        delegate);
+    Q_ASSERT(rc == 0);
+    Q_ASSERT(delegate != nullptr);
+
+    return rc == 0 && delegate != nullptr;
 }
 
 bool NetCoreHost::initializeGlobalObject(const QString &className)
@@ -151,9 +169,8 @@ bool NetCoreHost::load_hostfxr(const char_t *assembly_path, const char_t * dotne
     return (init_for_config_fptr && get_delegate_fptr && close_fptr && init_for_cmd_line_fptr);
 }
 
-load_assembly_and_get_function_pointer_fn NetCoreHost::get_dotnet_load_assembly(const char_t *config_path)
+load_assembly_and_get_function_pointer_fn NetCoreHost::loadNetAssembly(const char_t *config_path)
 {
-    // Load .NET Core
     void *load_assembly_and_get_function_pointer = nullptr;
     hostfxr_handle cxt = nullptr;
     int rc = init_for_config_fptr(config_path, nullptr, &cxt);

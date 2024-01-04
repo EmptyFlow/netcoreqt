@@ -2,7 +2,7 @@
   "profiles": {
     "NetCoreQt.Generator": {
       "commandName": "Project",
-      "commandLineArgs": "--help"
+      "commandLineArgs": "generate -s C:/work/Repositories/netcoreqt/netcoreqt/src/netcore/NetCoreLibrary/schema.test --cppfolder bluha --csfolder C:/work/Repositories/netcoreqt/netcoreqt/src/netcore/NetCoreLibrary/Generated"
     }
   }
 }
