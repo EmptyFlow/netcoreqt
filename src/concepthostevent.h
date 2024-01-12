@@ -8,19 +8,25 @@
 class ConceptEvent: public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(int intProperty READ intProperty NOTIFY intPropertyChanged FINAL)
+    Q_PROPERTY(int count READ count WRITE setcount NOTIFY countChanged FINAL)
+    Q_PROPERTY(int distance READ distance WRITE setdistance NOTIFY distanceChanged FINAL)
 private:
-    int m_intProperty { 0 };
+    int m_count { 0 };
+    int m_distance { 0 };
 
 public:
     explicit ConceptEvent(QObject *parent = nullptr) {
     }
 
-    int intProperty() const noexcept { return m_intProperty; }
-    void setintProperty(int intProperty) noexcept { m_intProperty = intProperty; }
+    int count() const noexcept { return m_count; }
+    void setcount(int count) noexcept { m_count = count; }
+
+    int distance() const noexcept { return m_distance; }
+    void setdistance(int distance) noexcept { m_distance = distance; }
 
 signals:
-    void intPropertyChanged();
+    void countChanged();
+    void distanceChanged();
 
 };
 
@@ -38,7 +44,13 @@ private:
 
     typedef void (CORECLR_DELEGATE_CALLTYPE* eventReceivedCallback)(int eventId);
     typedef void (CORECLR_DELEGATE_CALLTYPE* fireEventCallback)(eventReceivedCallback callback);
+    typedef void (CORECLR_DELEGATE_CALLTYPE* completeEventDelegate)(int eventId);
+    typedef int (CORECLR_DELEGATE_CALLTYPE* getCountDelegate)(int eventId);
+    typedef int (CORECLR_DELEGATE_CALLTYPE* getDistanceDelegate)(int eventId);
     eventReceivedCallback eventReceived;
+    completeEventDelegate completeEvent;
+    getCountDelegate getCount;
+    getDistanceDelegate getDistance;
 
 public:
     explicit ConceptHostEvent(QObject *parent = nullptr) {
@@ -58,14 +70,38 @@ public:
             qDebug() << "Can't get pointer for NetCoreQtImportGlobal.FireEventCallback";
             return;
         }
+        fireEventMethod(ConceptHostEvent::callbackEventReceived);
 
-        fireEventMethod(ConceptHostEvent::callbackTest);
+        m_netHost->getVoidPointerMethod("MyEventExternal", "CompleteEvent", false, (void**)&completeEvent);
+        if (completeEvent == nullptr) {
+            qDebug() << "Can't get pointer for NetCoreQtImportGlobal.CompleteEvent";
+            return;
+        }
+        m_netHost->getVoidPointerMethod("MyEventExternal", "GetCount", false, (void**)&getCount);
+        if (getCount == nullptr) {
+            qDebug() << "Can't get pointer for NetCoreQtImportGlobal.GetCount";
+            return;
+        }
+        m_netHost->getVoidPointerMethod("MyEventExternal", "GetDistance", false, (void**)&getDistance);
+        if (getDistance == nullptr) {
+            qDebug() << "Can't get pointer for NetCoreQtImportGlobal.GetDistance";
+            return;
+        }
+    }
+
+    void mapEvent(int eventId, ConceptEvent& event) {
+        event.setcount(getCount(eventId));
+        event.setdistance(getDistance(eventId));
+        // destroy event on Net side
+        completeEvent(eventId);
     }
 
 private:
-    static void callbackTest(int eventId){
+    static void callbackEventReceived(int eventId){
         auto instance = static_cast<ConceptHostEvent*>(ConceptHostEventInstance);
         ConceptEvent event;
+        instance->mapEvent(eventId, event);
+        //emit signal to external subscribers
         emit instance->eventReceivedFromNet(event);
     }
 
