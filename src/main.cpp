@@ -1,17 +1,27 @@
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
 #include "netcorehost.h"
+#include "concepthostevent.h"
 
 int main(int argc, char *argv[])
 {
     QGuiApplication app(argc, argv);
 
-    NetCoreHost host;
+    /*NetCoreHost host;
     //if (!host.loadAssemblyAndHost("NetCoreQtLibrary", "NetCoreQtLibrary")) {
-    auto root = "../../dlls"; //QCoreApplication::applicationDirPath() + "/netcore";
-    if (!host.loadAssemblyForSelfHosted(root, "NetCoreQtLibrary", "NetCoreQtLibrary")) {
+    //auto root = "C:/work/Experiments/hosting/bin/Debug";
+    auto root = "../../dlls";
+    //if (!host.loadAssemblyAndRun(root, "App", "App")) {
+    if (!host.loadApplicationAssembly(root, "NetCoreQtLibrary", "NetCoreQtLibrary")) {
         return 1;
     }
+
+    typedef unsigned char (CORECLR_DELEGATE_CALLTYPE* is_waiting_fn)(int objectId, int value);
+    is_waiting_fn is_waiting;
+
+    host.getApplicationMethod("NetCoreQtLibrary","NetCoreQtImportGlobal", "SetGlobalInt32", &is_waiting);
+
+    is_waiting(0,0);
 
     qDebug() << "LOADED!!!!";
 
@@ -21,9 +31,14 @@ int main(int argc, char *argv[])
 
     host.closeContext();
 
-    return 0;
+    return 0;*/
 
-    /*QQmlApplicationEngine engine;
+    QQmlApplicationEngine engine;
+
+    qmlRegisterType<NetCoreHost>("AppBackend", 1, 0, "NetCoreHost");
+    qmlRegisterType<ConceptHostEvent>("AppBackend", 1, 0, "ConceptHostEvent");
+    qmlRegisterType<ConceptEvent>("AppBackend", 1, 0, "ConceptEvent");
+
     const QUrl url(u"qrc:/netcoreqt/Main.qml"_qs);
     QObject::connect(
         &engine,
@@ -33,5 +48,5 @@ int main(int argc, char *argv[])
         Qt::QueuedConnection);
     engine.load(url);
 
-    return app.exec();*/
+    return app.exec();
 }

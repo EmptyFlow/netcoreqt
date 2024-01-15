@@ -43,7 +43,7 @@ private:
     NetCoreHost* m_netHost { nullptr };
 
     typedef void (CORECLR_DELEGATE_CALLTYPE* eventReceivedCallback)(int eventId);
-    typedef void (CORECLR_DELEGATE_CALLTYPE* fireEventCallback)(eventReceivedCallback callback);
+    typedef void (CORECLR_DELEGATE_CALLTYPE* fireEventCallback)(void* callback);
     typedef void (CORECLR_DELEGATE_CALLTYPE* completeEventDelegate)(int eventId);
     typedef int (CORECLR_DELEGATE_CALLTYPE* getCountDelegate)(int eventId);
     typedef int (CORECLR_DELEGATE_CALLTYPE* getDistanceDelegate)(int eventId);
@@ -59,33 +59,16 @@ public:
 
     NetCoreHost* netHost() const noexcept { return m_netHost; }
     void setNetHost(const NetCoreHost* netHost) noexcept {
+        if (netHost == nullptr) return;
         if (m_netHost == netHost) return;
 
         m_netHost = const_cast<NetCoreHost *>(netHost);
         emit netHostChanged();
 
-        fireEventCallback fireEventMethod = nullptr;
-        m_netHost->getVoidPointerMethod("MyEventExternal", "FireEventCallback", false, (void**)&fireEventMethod);
-        if (fireEventMethod == nullptr) {
-            qDebug() << "Can't get pointer for NetCoreQtImportGlobal.FireEventCallback";
-            return;
-        }
-        fireEventMethod(ConceptHostEvent::callbackEventReceived);
-
-        m_netHost->getVoidPointerMethod("MyEventExternal", "CompleteEvent", false, (void**)&completeEvent);
-        if (completeEvent == nullptr) {
-            qDebug() << "Can't get pointer for NetCoreQtImportGlobal.CompleteEvent";
-            return;
-        }
-        m_netHost->getVoidPointerMethod("MyEventExternal", "GetCount", false, (void**)&getCount);
-        if (getCount == nullptr) {
-            qDebug() << "Can't get pointer for NetCoreQtImportGlobal.GetCount";
-            return;
-        }
-        m_netHost->getVoidPointerMethod("MyEventExternal", "GetDistance", false, (void**)&getDistance);
-        if (getDistance == nullptr) {
-            qDebug() << "Can't get pointer for NetCoreQtImportGlobal.GetDistance";
-            return;
+        if (!m_netHost->contextLoaded()) {
+            connect(m_netHost, &NetCoreHost::contextLoadedChanged, this, &ConceptHostEvent::netContextLoadedChanged);
+        } else {
+            initializeMethods();
         }
     }
 
@@ -97,12 +80,45 @@ public:
     }
 
 private:
+    void initializeMethods() {
+        fireEventCallback fireEventMethod = nullptr;
+        m_netHost->getApplicationMethod("NetCoreQt.Generator.CodeSaver", "MyEventExternal", "FireEventCallback", &fireEventMethod);
+        if (fireEventMethod == nullptr) {
+            qDebug() << "Can't get pointer for NetCoreQtImportGlobal.FireEventCallback";
+            return;
+        }
+        fireEventMethod((void*)&ConceptHostEvent::callbackEventReceived);
+
+        auto completeProcessed = m_netHost->getApplicationMethod("NetCoreQt.Generator.CodeSaver", "MyEventExternal", "CompleteEvent", &completeEvent);
+        if (!completeProcessed) {
+            qDebug() << "Can't get pointer for NetCoreQtImportGlobal.CompleteEvent";
+            return;
+        }
+        auto getCountProcessed = m_netHost->getApplicationMethod("NetCoreQt.Generator.CodeSaver", "MyEventExternal", "GetCount", &getCount);
+        if (!getCountProcessed) {
+            qDebug() << "Can't get pointer for NetCoreQtImportGlobal.GetCount";
+            return;
+        }
+        auto getDistanceProcessed = m_netHost->getApplicationMethod("NetCoreQt.Generator.CodeSaver", "MyEventExternal", "GetDistance", &getDistance);
+        if (!getDistanceProcessed) {
+            qDebug() << "Can't get pointer for NetCoreQtImportGlobal.GetDistance";
+            return;
+        }
+    }
+
     static void callbackEventReceived(int eventId){
         auto instance = static_cast<ConceptHostEvent*>(ConceptHostEventInstance);
         ConceptEvent event;
         instance->mapEvent(eventId, event);
         //emit signal to external subscribers
         emit instance->eventReceivedFromNet(event);
+    }
+
+private slots:
+    void netContextLoadedChanged() {
+        if (m_netHost == nullptr) return;
+
+        if (m_netHost->contextLoaded()) initializeMethods();
     }
 
 signals:

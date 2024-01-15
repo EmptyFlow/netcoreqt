@@ -3,8 +3,8 @@ cmake_minimum_required(VERSION 3.16)
 project(netcoreqt VERSION 0.1 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(PATH_NET_CORE_NATIVE_FOLDER "C:/Program Files/dotnet/packs/Microsoft.NETCore.App.Host.win-x64/7.0.15/runtimes/win-x64/native")
-set(PATH_NET_CORE_NATIVE_LIBRARY "C:/Program Files/dotnet/packs/Microsoft.NETCore.App.Host.win-x64/7.0.15/runtimes/win-x64/native/nethost.lib")
+set(PATH_NET_CORE_NATIVE_FOLDER "C:/Program Files/dotnet/packs/Microsoft.NETCore.App.Host.win-x64/8.0.1/runtimes/win-x64/native")
+set(PATH_NET_CORE_NATIVE_LIBRARY "C:/Program Files/dotnet/packs/Microsoft.NETCore.App.Host.win-x64/8.0.1/runtimes/win-x64/native/nethost.lib")
 
 find_package(Qt6 6.4 REQUIRED COMPONENTS Quick)
 

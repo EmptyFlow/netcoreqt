@@ -18,6 +18,8 @@
 class NetCoreHost : public QObject
 {
     Q_OBJECT
+    Q_PROPERTY(bool contextLoaded READ contextLoaded NOTIFY contextLoadedChanged FINAL)
+
 private:
     hostfxr_initialize_for_dotnet_command_line_fn init_for_cmd_line_fptr = nullptr;
     hostfxr_initialize_for_runtime_config_fn init_for_config_fptr = nullptr;
@@ -27,31 +29,28 @@ private:
     load_assembly_and_get_function_pointer_fn load_assembly_and_get_function_pointer = nullptr;
     get_function_pointer_fn m_getFunctionPointer = nullptr;
     hostfxr_handle m_context = nullptr;
+    bool m_contextLoaded { false };
     QString loadedAssemblyName = "";
     QString loadedAssemblyNamespace = "";
     QString loadedAssemblyPath = "";
-
     typedef void (CORECLR_DELEGATE_CALLTYPE* setGlobalInt32Delegate)(int objectId, int value);
-    typedef void (CORECLR_DELEGATE_CALLTYPE* setGlobalDoubleDelegate)(int objectId, double value);
-    typedef void (CORECLR_DELEGATE_CALLTYPE* setGlobalStringDelegate)(int objectId, char_t* value);
-    setGlobalInt32Delegate setGlobalInt32Pointer = nullptr;
-    setGlobalDoubleDelegate setGlobalDoublePointer = nullptr;
-    setGlobalStringDelegate setGlobalStringPointer = nullptr;
+    setGlobalInt32Delegate setGlobalInt32Pointer;
 
 public:
     explicit NetCoreHost(QObject *parent = nullptr);
 
-    bool loadAssemblyAndHost(const QString &assemblyName, const QString &assemblyNamespace);
-    bool loadAssemblyForSelfHosted(const QString& rootPath, const QString &assemblyName, const QString &assemblyNamespace);
-    void startContext();
+    bool contextLoaded() const noexcept { return m_contextLoaded; }
+
+    Q_INVOKABLE bool loadAssemblyAndHost(const QString &assemblyName, const QString &assemblyNamespace);
+    Q_INVOKABLE bool loadApplicationSelfHostedAssembly(const QString& rootPath, const QString &assemblyName, const QString &assemblyNamespace);
+    Q_INVOKABLE bool loadApplicationAssembly(const QString& rootPath, const QString &assemblyName, const QString &assemblyNamespace);
+    Q_INVOKABLE void startContext();
     template <typename T>
     bool getPointerMethod(const QString &className, const QString &methodName, bool haveDelegate, T delegate);
-    bool getVoidPointerMethod(const QString &className, const QString &methodName, bool haveDelegate, void** delegate);
+    bool getVoidPointerMethod(const QString &className, const QString &methodName, bool haveDelegate, void* delegate);
+    bool getApplicationMethod(const QString &fullNamespace, const QString &className, const QString &methodName, void* delegate);
     bool initializeGlobalObject(const QString &className);
-    void setGlobalInt32(int objectId, int value) const { setGlobalInt32Pointer(objectId, value); }
-    void setGlobalDouble(int objectId, double value) const { setGlobalDoublePointer(objectId, value); }
-    void setGlobalString(int objectId, const QString& value) { setGlobalStringPointer(objectId, stringToCharPointer(value)); }
-    void closeContext() const noexcept;
+    Q_INVOKABLE void closeContext() const noexcept;
 
 private:
     void *load_library(const char_t *path);
@@ -61,6 +60,7 @@ private:
     char_t *stringToCharPointer(const QString &value) noexcept;
 
 signals:
+    void contextLoadedChanged();
 
 public slots:
     void startLoadedContext();
