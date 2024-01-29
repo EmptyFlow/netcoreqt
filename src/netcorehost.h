@@ -14,6 +14,7 @@
 #include <iostream>
 #endif
 #include <QObject>
+#include "netcorehostworker.h"
 
 class NetCoreHost : public QObject
 {
@@ -35,6 +36,7 @@ private:
     QString loadedAssemblyPath = "";
     typedef void (CORECLR_DELEGATE_CALLTYPE* setGlobalInt32Delegate)(int objectId, int value);
     setGlobalInt32Delegate setGlobalInt32Pointer;
+    NetCoreHostWorker* m_threadWorker { nullptr };
 
 public:
     explicit NetCoreHost(QObject *parent = nullptr);
@@ -45,12 +47,13 @@ public:
     Q_INVOKABLE bool loadApplicationSelfHostedAssembly(const QString& rootPath, const QString &assemblyName, const QString &assemblyNamespace);
     Q_INVOKABLE bool loadApplicationAssembly(const QString& rootPath, const QString &assemblyName, const QString &assemblyNamespace);
     Q_INVOKABLE void startContext();
+    Q_INVOKABLE void startContextInSeparateThread();
+    Q_INVOKABLE void closeContext() const noexcept;
     template <typename T>
     bool getPointerMethod(const QString &className, const QString &methodName, bool haveDelegate, T delegate);
     bool getVoidPointerMethod(const QString &className, const QString &methodName, bool haveDelegate, void* delegate);
     bool getApplicationMethod(const QString &fullNamespace, const QString &className, const QString &methodName, void* delegate);
     bool initializeGlobalObject(const QString &className);
-    Q_INVOKABLE void closeContext() const noexcept;
 
 private:
     void *load_library(const char_t *path);

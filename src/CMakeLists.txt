@@ -13,6 +13,8 @@ qt_standard_project_setup()
 qt_add_executable(appnetcoreqt
     netcorehost.cpp
     netcorehost.h
+    netcorehostworker.cpp
+    netcorehostworker.h
     main.cpp
 )
 

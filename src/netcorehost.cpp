@@ -1,4 +1,5 @@
 #include <QDir>
+#include <QThread>
 #include "netcorehost.h"
 
 NetCoreHost::NetCoreHost(QObject *parent)
@@ -98,7 +99,6 @@ bool NetCoreHost::loadApplicationAssembly(const QString& rootPath, const QString
 
     auto configPath = fullRootPath + "/" + assemblyName + ".dll";
     char_t * configPathAsCString = stringToCharPointer(configPath);
-    //char_t * rootPathAsCString = stringToCharPointer(fullRootPath);
 
     if (!load_hostfxr(configPathAsCString, nullptr)) {
         qDebug() << "Failed to load net core host";
@@ -108,7 +108,6 @@ bool NetCoreHost::loadApplicationAssembly(const QString& rootPath, const QString
 
     m_context = nullptr;
     std::vector<const char_t*> args { configPathAsCString };
-    //hostfxr_initialize_parameters params { sizeof(hostfxr_initialize_parameters), nullptr, nullptr };
     int rc = init_for_cmd_line_fptr(args.size(), args.data(), nullptr, &m_context);
     if (rc != 0 || m_context == nullptr)
     {
@@ -134,34 +133,33 @@ bool NetCoreHost::loadApplicationAssembly(const QString& rootPath, const QString
     m_contextLoaded = true;
     emit contextLoadedChanged();
 
-    /*typedef unsigned char (CORECLR_DELEGATE_CALLTYPE* is_waiting_fn)(int objectId, int value);
-    is_waiting_fn is_waiting;
-    rc = m_getFunctionPointer(
-        stringToCharPointer("NetCoreQtLibrary.NetCoreQtImportGlobal, NetCoreQtLibrary"),
-        stringToCharPointer("SetGlobalInt32"),
-        UNMANAGEDCALLERSONLY_METHOD,
-        nullptr, nullptr, (void**)&is_waiting);
-    assert(rc == 0 && is_waiting != nullptr && "Failure: get_function_pointer()");*/
-
-    //assert(rc == 0 && is_waiting != nullptr && "Failure: get_function_pointer()");
-
-    /*auto rc1 = m_getFunctionPointer(
-        stringToCharPointer("NetCoreQtLibrary.NetCoreQtImportGlobal, NetCoreQtLibrary"),
-        stringToCharPointer("SetGlobalInt32"),
-        UNMANAGEDCALLERSONLY_METHOD,
-        nullptr, nullptr, (void**)&setGlobalInt32Pointer
-    );
-    qDebug() << rc1;
-    if (rc1 != 0 || setGlobalInt32Pointer == nullptr) {
-        qDebug() << "Get delegate failed: " << rc1;
-    }*/
-
     return true;
 }
 
 void NetCoreHost::startContext()
 {
     run_app_fptr(m_context);
+}
+
+void NetCoreHost::startContextInSeparateThread()
+{
+    m_threadWorker = new NetCoreHostWorker(this);
+    m_threadWorker->setupContext(m_context, run_app_fptr, close_fptr);
+
+    QThread* thread = new QThread(m_threadWorker);
+
+    connect(thread, &QThread::started, m_threadWorker, &NetCoreHostWorker::needStartContext);
+    connect(m_threadWorker, &NetCoreHostWorker::finished, thread, &QThread::quit);
+
+    connect(m_threadWorker, &NetCoreHostWorker::finished, m_threadWorker, &NetCoreHostWorker::deleteLater);
+    connect(thread, &QThread::finished, thread, &QThread::deleteLater);
+
+    thread->start();
+}
+
+void NetCoreHost::closeContext() const noexcept
+{
+    close_fptr(m_context);
 }
 
 bool NetCoreHost::getVoidPointerMethod(const QString &className, const QString &methodName, bool haveDelegate, void *delegate)
@@ -189,10 +187,8 @@ bool NetCoreHost::getApplicationMethod(const QString &fullNamespace, const QStri
     qDebug() << qualifiedName;
     qDebug() << methodName;
     auto rc = m_getFunctionPointer(
-        //stringToCharPointer("NetCoreQtLibrary.NetCoreQtImportGlobal, NetCoreQtLibrary"),
         stringToCharPointer(qualifiedName),
         stringToCharPointer(methodName),
-        //stringToCharPointer("SetGlobalInt32"),
         UNMANAGEDCALLERSONLY_METHOD,
         nullptr, nullptr,(void**) delegate
     );
@@ -210,11 +206,6 @@ bool NetCoreHost::initializeGlobalObject(const QString &className)
     if (!getPointerMethod("NetCoreQtImportGlobal", "SetGlobalString", false, setGlobalStringPointer)) return false;*/
 
     return true;
-}
-
-void NetCoreHost::closeContext() const noexcept
-{
-    close_fptr(m_context);
 }
 
 template <typename T>

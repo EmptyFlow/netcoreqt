@@ -1,12 +1,14 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFramework>net7.0</TargetFramework>
+		<TargetFramework>net8.0</TargetFramework>
 		<Nullable>enable</Nullable>
-		<EnableDynamicLoading>true</EnableDynamicLoading>
+		<!--<EnableDynamicLoading>true</EnableDynamicLoading>-->
+		<UseAppHost>false</UseAppHost>
 		<OutputType>Exe</OutputType>
 		<StartupObject>NetCoreQtLibrary.Program</StartupObject>
-		<RuntimeIdentifiers>win7-x86;win7-x64;win10-x86;win10-x64;win-x64;win-x86</RuntimeIdentifiers>
+		<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+		<!--<RuntimeIdentifiers>win-x64</RuntimeIdentifiers>-->
 	</PropertyGroup>
 
 </Project>
