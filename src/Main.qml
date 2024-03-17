@@ -17,17 +17,29 @@ Window {
                 console.log("Can't load library!");
                 return;
             }
+        }
+    }
 
-            //netHost.startContext();
+    Rectangle {
+        color: "red"
+        width: 100
+        height: 100
+
+        MouseArea {
+            anchors.fill: parent
+            onPressed: {
+                netHost.startContextInSeparateThread();
+            }
         }
     }
 
     ConceptHostEvent {
         id: conceptHostEvent
         netHost: netHost
-        onEventReceivedFromNet: function (event) {
-            console.log(event.count);
-            console.log(event.distance);
+        onEventReceivedFromNet: function (count, distance) {
+            console.log("event Received!!!!");
+            console.log(count);
+            console.log(distance);
         }
     }
 }

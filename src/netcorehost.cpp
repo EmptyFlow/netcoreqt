@@ -143,7 +143,7 @@ void NetCoreHost::startContext()
 
 void NetCoreHost::startContextInSeparateThread()
 {
-    m_threadWorker = new NetCoreHostWorker(this);
+    m_threadWorker = new NetCoreHostWorker();
     m_threadWorker->setupContext(m_context, run_app_fptr, close_fptr);
 
     QThread* thread = new QThread(m_threadWorker);
@@ -151,10 +151,9 @@ void NetCoreHost::startContextInSeparateThread()
     connect(thread, &QThread::started, m_threadWorker, &NetCoreHostWorker::needStartContext);
     connect(m_threadWorker, &NetCoreHostWorker::finished, thread, &QThread::quit);
 
-    connect(m_threadWorker, &NetCoreHostWorker::finished, m_threadWorker, &NetCoreHostWorker::deleteLater);
-    connect(thread, &QThread::finished, thread, &QThread::deleteLater);
-
+    m_threadWorker->moveToThread(thread);
     thread->start();
+    qDebug() << "Thread started";
 }
 
 void NetCoreHost::closeContext() const noexcept

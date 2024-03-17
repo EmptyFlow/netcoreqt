@@ -1,3 +1,5 @@
+#include <QDebug>
+#include <QThread>
 #include "netcorehostworker.h"
 
 NetCoreHostWorker::NetCoreHostWorker(QObject *parent)

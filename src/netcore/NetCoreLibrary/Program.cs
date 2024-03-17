@@ -7,9 +7,9 @@ namespace NetCoreQtLibrary {
     public class Program {
 
         public static async Task Main ( string[] args ) {
-            await Task.Delay ( 10000 );
+            await Task.Delay ( 5000 );
             MyEventExternal.Create ( new MyEvent ( 20, 100 ) );
-            await Task.Delay ( 10000 );
+            await Task.Delay ( 5000 );
             MyEventExternal.Create ( new MyEvent ( 98459345, 4332434 ) );
         }
 

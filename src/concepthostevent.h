@@ -111,7 +111,7 @@ private:
         ConceptEvent event;
         instance->mapEvent(eventId, event);
         //emit signal to external subscribers
-        emit instance->eventReceivedFromNet(event);
+        emit instance->eventReceivedFromNet(event.count(), event.distance());
     }
 
 private slots:
@@ -123,7 +123,7 @@ private slots:
 
 signals:
     void netHostChanged();
-    void eventReceivedFromNet(const ConceptEvent& event);
+    void eventReceivedFromNet(int count, int distance);
 
 };
 
