@@ -34,6 +34,7 @@ private:
     QString loadedAssemblyName = "";
     QString loadedAssemblyNamespace = "";
     QString loadedAssemblyPath = "";
+    QString m_hostedType { "" };
     typedef void (CORECLR_DELEGATE_CALLTYPE* setGlobalInt32Delegate)(int objectId, int value);
     setGlobalInt32Delegate setGlobalInt32Pointer;
     NetCoreHostWorker* m_threadWorker { nullptr };
@@ -51,7 +52,8 @@ public:
     Q_INVOKABLE void closeContext() const noexcept;
     template <typename T>
     bool getPointerMethod(const QString &className, const QString &methodName, bool haveDelegate, T delegate);
-    bool getVoidPointerMethod(const QString &className, const QString &methodName, bool haveDelegate, void* delegate);
+    bool getLibraryMethod(const QString &fullNamespace, const QString &className, const QString &methodName, void* delegate);
+    bool getMethod(const QString &fullNamespace, const QString &className, const QString &methodName, void* delegate);
     bool getApplicationMethod(const QString &fullNamespace, const QString &className, const QString &methodName, void* delegate);
     bool initializeGlobalObject(const QString &className);
 

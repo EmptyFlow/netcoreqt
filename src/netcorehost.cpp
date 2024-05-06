@@ -29,6 +29,8 @@ bool NetCoreHost::loadAssemblyAndHost(const QString &assemblyName, const QString
     loadedAssemblyNamespace = assemblyNamespace;
     loadedAssemblyPath = rootPath + "/" + assemblyName + ".dll";
 
+    m_hostedType = "library";
+
     return true;
 }
 
@@ -72,22 +74,8 @@ bool NetCoreHost::loadApplicationSelfHostedAssembly(const QString& rootPath, con
     loadedAssemblyNamespace = assemblyNamespace;
     loadedAssemblyPath = configPath;
 
-    /*auto rc1 = 0;
-
-    rc1 = m_getFunctionPointer(
-        stringToCharPointer("NetCoreQtLibrary.NetCoreQtImportGlobal, NetCoreQtLibrary"),
-        stringToCharPointer("SetGlobalInt32"),
-        UNMANAGEDCALLERSONLY_METHOD,
-        nullptr,
-        nullptr,
-        (void**)setGlobalInt32Pointer
-    );
-    qDebug() << rc1;
-    if (rc1 != 0 || setGlobalInt32Pointer == nullptr) {
-        qDebug() << "Get delegate failed: " << rc1;
-    }*/
-
     m_contextLoaded = true;
+    m_hostedType = "application";
     emit contextLoadedChanged();
 
     return true;
@@ -131,6 +119,7 @@ bool NetCoreHost::loadApplicationAssembly(const QString& rootPath, const QString
     loadedAssemblyNamespace = assemblyNamespace;
 
     m_contextLoaded = true;
+    m_hostedType = "application";
     emit contextLoadedChanged();
 
     return true;
@@ -161,16 +150,15 @@ void NetCoreHost::closeContext() const noexcept
     close_fptr(m_context);
 }
 
-bool NetCoreHost::getVoidPointerMethod(const QString &className, const QString &methodName, bool haveDelegate, void *delegate)
+bool NetCoreHost::getLibraryMethod(const QString &fullNamespace, const QString &className, const QString &methodName, void *delegate)
 {
-    qDebug() << loadedAssemblyPath;
-    qDebug() << loadedAssemblyNamespace + "." + className + ", " + loadedAssemblyName;
+    qDebug() << fullNamespace + "." + className + ", " + loadedAssemblyName;
 
     auto rc = load_assembly_and_get_function_pointer(
         stringToCharPointer(loadedAssemblyPath),
-        stringToCharPointer(loadedAssemblyNamespace + "." + className + ", " + loadedAssemblyName),
+        stringToCharPointer(fullNamespace + "." + className + ", " + loadedAssemblyName),
         stringToCharPointer(methodName),
-        haveDelegate ? stringToCharPointer(loadedAssemblyNamespace + "." + className + "+" + className + "Delegate, " + loadedAssemblyName) : UNMANAGEDCALLERSONLY_METHOD,
+        UNMANAGEDCALLERSONLY_METHOD,
         nullptr,
         (void**)delegate);
     qDebug() << (rc == 0 ? "rc is null" : "");
@@ -178,6 +166,20 @@ bool NetCoreHost::getVoidPointerMethod(const QString &className, const QString &
     Q_ASSERT(delegate != nullptr);
 
     return rc == 0 && delegate != nullptr;
+}
+
+bool NetCoreHost::getMethod(const QString &fullNamespace, const QString &className, const QString &methodName, void *delegate)
+{
+    if (m_hostedType == "library") {
+        return getLibraryMethod(fullNamespace, className, methodName, delegate);
+    }
+    if (m_hostedType == "application") {
+        return getApplicationMethod(fullNamespace, className, methodName, delegate);
+    }
+
+    qDebug() << "Hosted type not specified! You need use one from loadX methods.";
+
+    return false;
 }
 
 bool NetCoreHost::getApplicationMethod(const QString &fullNamespace, const QString &className, const QString &methodName, void* delegate)

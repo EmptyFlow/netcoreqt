@@ -4,7 +4,7 @@
 		<TargetFramework>net8.0</TargetFramework>
 		<Nullable>enable</Nullable>
 		<!--<EnableDynamicLoading>true</EnableDynamicLoading>-->
-		<UseAppHost>false</UseAppHost>
+		<!--<UseAppHost>false</UseAppHost>-->
 		<OutputType>Exe</OutputType>
 		<StartupObject>NetCoreQtLibrary.Program</StartupObject>
 		<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
