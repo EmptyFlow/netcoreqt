@@ -1,6 +1,10 @@
 # netcoreqt
 Tooling for connecting Qt/QML and .net core applications.
 
+## Supported connectivity options
+
+* Application like Console, Web, Desktop - hosted (which mean installed on machine .net runtime) or selfcontained
+
 ## Roadmap
 
 ### Start point in Qt
