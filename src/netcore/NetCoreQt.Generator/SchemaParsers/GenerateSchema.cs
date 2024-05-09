@@ -10,6 +10,8 @@
         /// </summary>
         public string Version { get; init; } = "";
 
+        public string DefaultNamespace { get; set; } = "";
+
         public List<GenerateEvent> Events { get; set; } = new List<GenerateEvent>();
 
     }

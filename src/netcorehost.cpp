@@ -206,8 +206,6 @@ bool NetCoreHost::getMethod(const QString &fullNamespace, const QString &classNa
 bool NetCoreHost::getApplicationMethod(const QString &fullNamespace, const QString &className, const QString &methodName, void* delegate)
 {
     auto qualifiedName = fullNamespace + "." + className + ", " + loadedAssemblyName;
-    qDebug() << qualifiedName;
-    qDebug() << methodName;
     auto rc = m_getFunctionPointer(
         stringToCharPointer(qualifiedName),
         stringToCharPointer(methodName),

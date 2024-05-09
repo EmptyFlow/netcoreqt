@@ -3,6 +3,8 @@
 
 #include <QObject>
 #include <QQmlEngine>
+#include <QQueue>
+#include <QMutex>
 #include "netcorehost.h"
 
 class ConceptEvent: public QObject
@@ -41,6 +43,8 @@ class ConceptHostEvent : public QObject
 
 private:
     NetCoreHost* m_netHost { nullptr };
+    QQueue<ConceptEvent*> m_receivedEvents { QQueue<ConceptEvent*>() };
+    QMutex m_mutex { QMutex() };
 
     typedef void (CORECLR_DELEGATE_CALLTYPE* eventReceivedCallback)(int eventId);
     typedef void (CORECLR_DELEGATE_CALLTYPE* fireEventCallback)(void* callback);
@@ -55,6 +59,7 @@ private:
 public:
     explicit ConceptHostEvent(QObject *parent = nullptr) {
         ConceptHostEventInstance = this;
+        connect(this, &ConceptHostEvent::processQueuedEvents, this, &ConceptHostEvent::needProcessQueue, Qt::QueuedConnection);
     }
 
     NetCoreHost* netHost() const noexcept { return m_netHost; }
@@ -72,9 +77,14 @@ public:
         }
     }
 
-    void mapEvent(int eventId, ConceptEvent& event) {
-        event.setcount(getCount(eventId));
-        event.setdistance(getDistance(eventId));
+    void mapEvent(int eventId) {
+        QMutexLocker locker(&m_mutex); // to be sure we don't have race condition issues
+
+        auto newEvent = new ConceptEvent(this);
+        newEvent->setcount(getCount(eventId));
+        newEvent->setdistance(getDistance(eventId));
+        m_receivedEvents.append(newEvent);
+
         // destroy event on Net side
         completeEvent(eventId);
     }
@@ -108,10 +118,8 @@ private:
 
     static void callbackEventReceived(int eventId){
         auto instance = static_cast<ConceptHostEvent*>(ConceptHostEventInstance);
-        ConceptEvent event;
-        instance->mapEvent(eventId, event);
-        //emit signal to external subscribers
-        emit instance->eventReceivedFromNet(event.count(), event.distance());
+        instance->mapEvent(eventId);
+        emit instance->processQueuedEvents();
     }
 
 private slots:
@@ -121,9 +129,22 @@ private slots:
         if (m_netHost->contextLoaded()) initializeMethods();
     }
 
+    void needProcessQueue() {
+        if (m_receivedEvents.isEmpty()) return;
+
+        QMutexLocker locker(&m_mutex); // to be sure we don't have race condition issues
+
+        foreach (auto receivedEvent, m_receivedEvents) {
+            emit eventReceivedFromNet(receivedEvent);
+        }
+
+        m_receivedEvents.clear();
+    }
+
 signals:
     void netHostChanged();
-    void eventReceivedFromNet(int count, int distance);
+    void processQueuedEvents();
+    void eventReceivedFromNet(const ConceptEvent* event);
 
 };
 

@@ -143,10 +143,28 @@ namespace NetCoreQt.Generator.CodeGenerators {
 
         }
 
-        private void GenerateCppClasses ( GenerateSchema schema, GeneratedResultLanguage result ) {
-            throw new NotImplementedException ();
+        private Task GenerateCppClasses ( GenerateSchema schema, GeneratedResultLanguage result ) {
+            foreach ( var item in schema.Events ) {
+                string generatedEvent;
+                if ( item.HostLanguages.Contains ( CsLanguage ) ) {
+                    generatedEvent = GenerateCppHostEvent ( item );
+                } else {
+                    generatedEvent = GenerateCppGuestEvent ( item, schema.DefaultNamespace );
+                }
+
+                if ( result.Events.ContainsKey ( item.Name ) ) continue;
+
+                result.Events.Add ( item.Name, generatedEvent );
+            }
+
+            return Task.CompletedTask;
         }
 
+        private static string GenerateCppGuestEvent ( GenerateEvent item, string defaultNamespace ) => CppEventCodeGenerator.GenerateGuestEvent ( item, defaultNamespace );
+
+        private string GenerateCppHostEvent ( GenerateEvent item ) {
+            throw new NotImplementedException ();
+        }
     }
 
 }

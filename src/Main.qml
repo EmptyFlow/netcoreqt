@@ -13,8 +13,8 @@ Window {
         id: netHost
         Component.onCompleted: {
             //const loaded = netHost.loadApplicationAssembly("../../dlls", "NetCoreQtLibrary", "NetCoreQtLibrary");
-            //const loaded = netHost.loadApplicationSelfHostedAssembly("../../selfhosteddlls", "NetCoreQtLibrary", "NetCoreQtLibrary");
-            const loaded = netHost.loadRuntimeAssembly("../../runtimeassemblydlls", "NetCoreQtLibrary", "NetCoreQtLibrary");
+            const loaded = netHost.loadApplicationSelfHostedAssembly("../../selfhosteddlls", "NetCoreQtLibrary", "NetCoreQtLibrary");
+            //const loaded = netHost.loadRuntimeAssembly("../../runtimeassemblydlls", "NetCoreQtLibrary", "NetCoreQtLibrary");
             if (!loaded) {
                 console.log("Can't load library!");
                 return;
@@ -38,10 +38,10 @@ Window {
     ConceptHostEvent {
         id: conceptHostEvent
         netHost: netHost
-        onEventReceivedFromNet: function (count, distance) {
+        onEventReceivedFromNet: function (receivedEvent) {
             console.log("event Received!!!!");
-            console.log(count);
-            console.log(distance);
+            console.log(receivedEvent.count);
+            console.log(receivedEvent.distance);
         }
     }
 }
