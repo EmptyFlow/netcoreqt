@@ -82,24 +82,24 @@ public:
 private:
     void initializeMethods() {
         fireEventCallback fireEventMethod = nullptr;
-        m_netHost->getApplicationMethod("NetCoreQt.Generator.CodeSaver", "MyEventExternal", "FireEventCallback", &fireEventMethod);
+        m_netHost->getMethod("NetCoreQt.Generator.CodeSaver", "MyEventExternal", "FireEventCallback", &fireEventMethod);
         if (fireEventMethod == nullptr) {
             qDebug() << "Can't get pointer for NetCoreQtImportGlobal.FireEventCallback";
             return;
         }
         fireEventMethod((void*)&ConceptHostEvent::callbackEventReceived);
 
-        auto completeProcessed = m_netHost->getApplicationMethod("NetCoreQt.Generator.CodeSaver", "MyEventExternal", "CompleteEvent", &completeEvent);
+        auto completeProcessed = m_netHost->getMethod("NetCoreQt.Generator.CodeSaver", "MyEventExternal", "CompleteEvent", &completeEvent);
         if (!completeProcessed) {
             qDebug() << "Can't get pointer for NetCoreQtImportGlobal.CompleteEvent";
             return;
         }
-        auto getCountProcessed = m_netHost->getApplicationMethod("NetCoreQt.Generator.CodeSaver", "MyEventExternal", "GetCount", &getCount);
+        auto getCountProcessed = m_netHost->getMethod("NetCoreQt.Generator.CodeSaver", "MyEventExternal", "GetCount", &getCount);
         if (!getCountProcessed) {
             qDebug() << "Can't get pointer for NetCoreQtImportGlobal.GetCount";
             return;
         }
-        auto getDistanceProcessed = m_netHost->getApplicationMethod("NetCoreQt.Generator.CodeSaver", "MyEventExternal", "GetDistance", &getDistance);
+        auto getDistanceProcessed = m_netHost->getMethod("NetCoreQt.Generator.CodeSaver", "MyEventExternal", "GetDistance", &getDistance);
         if (!getDistanceProcessed) {
             qDebug() << "Can't get pointer for NetCoreQtImportGlobal.GetDistance";
             return;

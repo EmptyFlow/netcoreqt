@@ -8,15 +8,19 @@ NetCoreHost::NetCoreHost(QObject *parent)
 
 }
 
-bool NetCoreHost::loadAssemblyAndHost(const QString &assemblyName, const QString &assemblyNamespace)
+bool NetCoreHost::loadRuntimeAssembly(const QString& rootPath, const QString &assemblyName, const QString &assemblyNamespace)
 {
     if (!load_hostfxr(nullptr, nullptr)) {
         qDebug() << "Failed to load net core host";
         Q_ASSERT(false);
         return 1;
     }
-    auto rootPath = QCoreApplication::applicationDirPath();
-    auto configPath = rootPath + "/" + assemblyName + ".runtimeconfig.json";
+    QDir dir(rootPath);
+    auto configPath = dir.absolutePath() + "/" + assemblyName + ".runtimeconfig.json";
+
+    qDebug() << "loadRuntimeAssembly: configpath=" << configPath;
+    qDebug() << "loadRuntimeAssembly: rootpath=" << rootPath;
+
 
     char_t * configPathAsCString = stringToCharPointer(configPath);
 
@@ -25,11 +29,17 @@ bool NetCoreHost::loadAssemblyAndHost(const QString &assemblyName, const QString
     Q_ASSERT(load_assembly_and_get_function_pointer != nullptr);
     if (load_assembly_and_get_function_pointer == nullptr) return false;
 
+    qDebug() << "loadRuntimeAssembly: assemblyname=" << assemblyName;
+    qDebug() << "loadRuntimeAssembly: assemblynamespace=" << assemblyNamespace;
+    qDebug() << "loadRuntimeAssembly: set type library";
+
     loadedAssemblyName = assemblyName;
     loadedAssemblyNamespace = assemblyNamespace;
-    loadedAssemblyPath = rootPath + "/" + assemblyName + ".dll";
+    loadedAssemblyPath = configPath;
 
+    m_contextLoaded = true;
     m_hostedType = "library";
+    emit contextLoadedChanged();
 
     return true;
 }
@@ -40,6 +50,9 @@ bool NetCoreHost::loadApplicationSelfHostedAssembly(const QString& rootPath, con
     auto configPath = dir.absolutePath() + "/" + assemblyName + ".dll";
     char_t * configPathAsCString = stringToCharPointer(configPath);
     char_t * rootPathAsCString = stringToCharPointer(rootPath);
+
+    qDebug() << "loadApplicationSelfHostedAssembly: configpath=" << configPath;
+    qDebug() << "loadApplicationSelfHostedAssembly: rootpath=" << dir.absolutePath();
 
     if (!load_hostfxr(configPathAsCString, nullptr)) {
         qDebug() << "Failed to load net core host";
@@ -70,6 +83,10 @@ bool NetCoreHost::loadApplicationSelfHostedAssembly(const QString& rootPath, con
         return false;
     }
 
+    qDebug() << "loadApplicationSelfHostedAssembly: assemblyname=" << assemblyName;
+    qDebug() << "loadApplicationSelfHostedAssembly: assemblynamespace=" << assemblyNamespace;
+    qDebug() << "loadApplicationSelfHostedAssembly: set type application";
+
     loadedAssemblyName = assemblyName;
     loadedAssemblyNamespace = assemblyNamespace;
     loadedAssemblyPath = configPath;
@@ -87,6 +104,9 @@ bool NetCoreHost::loadApplicationAssembly(const QString& rootPath, const QString
 
     auto configPath = fullRootPath + "/" + assemblyName + ".dll";
     char_t * configPathAsCString = stringToCharPointer(configPath);
+
+    qDebug() << "loadApplicationAssembly: configpath=" << configPath;
+    qDebug() << "loadApplicationAssembly: rootpath=" << dir.absolutePath();
 
     if (!load_hostfxr(configPathAsCString, nullptr)) {
         qDebug() << "Failed to load net core host";
@@ -114,6 +134,10 @@ bool NetCoreHost::loadApplicationAssembly(const QString& rootPath, const QString
         Q_ASSERT(false);
         return false;
     }
+
+    qDebug() << "loadApplicationAssembly: assemblyname=" << assemblyName;
+    qDebug() << "loadApplicationAssembly: assemblynamespace=" << assemblyNamespace;
+    qDebug() << "loadApplicationAssembly: set type application";
 
     loadedAssemblyName = assemblyName;
     loadedAssemblyNamespace = assemblyNamespace;
@@ -152,8 +176,6 @@ void NetCoreHost::closeContext() const noexcept
 
 bool NetCoreHost::getLibraryMethod(const QString &fullNamespace, const QString &className, const QString &methodName, void *delegate)
 {
-    qDebug() << fullNamespace + "." + className + ", " + loadedAssemblyName;
-
     auto rc = load_assembly_and_get_function_pointer(
         stringToCharPointer(loadedAssemblyPath),
         stringToCharPointer(fullNamespace + "." + className + ", " + loadedAssemblyName),
@@ -161,7 +183,6 @@ bool NetCoreHost::getLibraryMethod(const QString &fullNamespace, const QString &
         UNMANAGEDCALLERSONLY_METHOD,
         nullptr,
         (void**)delegate);
-    qDebug() << (rc == 0 ? "rc is null" : "");
     Q_ASSERT(rc == 0);
     Q_ASSERT(delegate != nullptr);
 
@@ -198,34 +219,6 @@ bool NetCoreHost::getApplicationMethod(const QString &fullNamespace, const QStri
     if (delegate == nullptr) return false;
 
     return true;
-}
-
-bool NetCoreHost::initializeGlobalObject(const QString &className)
-{
-    /*if (!getPointerMethod("NetCoreQtImportGlobal", "SetGlobalInt32", false, setGlobalInt32Pointer)) return false;
-    if (!getPointerMethod("NetCoreQtImportGlobal", "SetGlobalDouble", false, setGlobalDoublePointer)) return false;
-    if (!getPointerMethod("NetCoreQtImportGlobal", "SetGlobalString", false, setGlobalStringPointer)) return false;*/
-
-    return true;
-}
-
-template <typename T>
-bool NetCoreHost::getPointerMethod(const QString &className, const QString &methodName, bool haveDelegate, T delegate)
-{
-    qDebug() << loadedAssemblyPath;
-    qDebug() << loadedAssemblyNamespace + "." + className + ", " + loadedAssemblyName;
-
-    auto rc = load_assembly_and_get_function_pointer(
-        stringToCharPointer(loadedAssemblyPath),
-        stringToCharPointer(loadedAssemblyNamespace + "." + className + ", " + loadedAssemblyName),
-        stringToCharPointer(methodName),
-        haveDelegate ? stringToCharPointer(loadedAssemblyNamespace + "." + className + "+" + className + "Delegate, " + loadedAssemblyName) : UNMANAGEDCALLERSONLY_METHOD,
-        nullptr,
-        (void**)&delegate);
-    Q_ASSERT(rc == 0);
-    Q_ASSERT(delegate != nullptr);
-
-    return rc == 0 && delegate != nullptr;
 }
 
 void *NetCoreHost::load_library(const char_t *path)

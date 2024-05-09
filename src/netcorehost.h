@@ -44,18 +44,15 @@ public:
 
     bool contextLoaded() const noexcept { return m_contextLoaded; }
 
-    Q_INVOKABLE bool loadAssemblyAndHost(const QString &assemblyName, const QString &assemblyNamespace);
+    Q_INVOKABLE bool loadRuntimeAssembly(const QString& rootPath, const QString &assemblyName, const QString &assemblyNamespace);
     Q_INVOKABLE bool loadApplicationSelfHostedAssembly(const QString& rootPath, const QString &assemblyName, const QString &assemblyNamespace);
     Q_INVOKABLE bool loadApplicationAssembly(const QString& rootPath, const QString &assemblyName, const QString &assemblyNamespace);
     Q_INVOKABLE void startContext();
     Q_INVOKABLE void startContextInSeparateThread();
     Q_INVOKABLE void closeContext() const noexcept;
-    template <typename T>
-    bool getPointerMethod(const QString &className, const QString &methodName, bool haveDelegate, T delegate);
     bool getLibraryMethod(const QString &fullNamespace, const QString &className, const QString &methodName, void* delegate);
     bool getMethod(const QString &fullNamespace, const QString &className, const QString &methodName, void* delegate);
     bool getApplicationMethod(const QString &fullNamespace, const QString &className, const QString &methodName, void* delegate);
-    bool initializeGlobalObject(const QString &className);
 
 private:
     void *load_library(const char_t *path);
